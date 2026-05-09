@@ -1,0 +1,104 @@
+const POINTS_GROUP = {
+  EXACT_SCORE: 10,
+  WINNER_AND_WINNER_GOALS: 8,
+  WINNER_AND_GOAL_DIFFERENCE: 7,
+  CORRECT_DRAW: 6,
+  WINNER_AND_LOSER_GOALS: 5,
+  WINNER_ONLY: 3,
+  MISS: 0,
+};
+
+const POINTS_KNOCKOUT = {
+  EXACT_SCORE: 15,
+  WINNER_AND_WINNER_GOALS: 12,
+  WINNER_AND_GOAL_DIFFERENCE: 10,
+  CORRECT_DRAW: 9,
+  WINNER_AND_LOSER_GOALS: 7,
+  WINNER_ONLY: 5,
+  MISS: 0,
+};
+
+const KNOCKOUT_PHASES = [
+  'round_of_32',
+  'round_of_16',
+  'quarter',
+  'semi',
+  'third_place',
+  'final',
+];
+
+const QUALIFICATION_POINTS_PER_TEAM = 3;
+
+interface MatchResult {
+  homeScore: number;
+  awayScore: number;
+  phase: string;
+}
+
+interface BetPrediction {
+  homeScore: number;
+  awayScore: number;
+}
+
+function getWinner(home: number, away: number): 'home' | 'away' | 'draw' {
+  if (home > away) return 'home';
+  if (away > home) return 'away';
+  return 'draw';
+}
+
+export function calculatePoints(bet: BetPrediction, match: MatchResult): number {
+  const points = KNOCKOUT_PHASES.includes(match.phase) ? POINTS_KNOCKOUT : POINTS_GROUP;
+
+  const betWinner = getWinner(bet.homeScore, bet.awayScore);
+  const matchWinner = getWinner(match.homeScore, match.awayScore);
+
+  if (bet.homeScore === match.homeScore && bet.awayScore === match.awayScore) {
+    return points.EXACT_SCORE;
+  }
+
+  if (matchWinner === 'draw' && betWinner === 'draw') {
+    return points.CORRECT_DRAW;
+  }
+
+  if (betWinner !== matchWinner) {
+    return points.MISS;
+  }
+
+  const betGoalDiff = bet.homeScore - bet.awayScore;
+  const matchGoalDiff = match.homeScore - match.awayScore;
+
+  const betWinnerGoals = betWinner === 'home' ? bet.homeScore : bet.awayScore;
+  const matchWinnerGoals = matchWinner === 'home' ? match.homeScore : match.awayScore;
+  const betLoserGoals = betWinner === 'home' ? bet.awayScore : bet.homeScore;
+  const matchLoserGoals = matchWinner === 'home' ? match.awayScore : match.homeScore;
+
+  if (betWinnerGoals === matchWinnerGoals) {
+    return points.WINNER_AND_WINNER_GOALS;
+  }
+
+  if (betGoalDiff === matchGoalDiff) {
+    return points.WINNER_AND_GOAL_DIFFERENCE;
+  }
+
+  if (betLoserGoals === matchLoserGoals) {
+    return points.WINNER_AND_LOSER_GOALS;
+  }
+
+  return points.WINNER_ONLY;
+}
+
+export function calculateQualificationPoints(
+  predictedTeamIds: number[],
+  qualifiedTeamIds: number[]
+): number {
+  const correctPicks = predictedTeamIds.filter((id) => qualifiedTeamIds.includes(id));
+  return correctPicks.length * QUALIFICATION_POINTS_PER_TEAM;
+}
+
+export default {
+  calculatePoints,
+  calculateQualificationPoints,
+  POINTS_GROUP,
+  POINTS_KNOCKOUT,
+  QUALIFICATION_POINTS_PER_TEAM,
+};

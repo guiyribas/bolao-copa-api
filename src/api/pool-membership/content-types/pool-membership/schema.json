@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pool_memberships",
+  "info": {
+    "singularName": "pool-membership",
+    "pluralName": "pool-memberships",
+    "displayName": "PoolMembership",
+    "description": "Participação de usuários nos bolões com status de pagamento"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "pool": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::pool.pool",
+      "inversedBy": "memberships"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "hasPaid": {
+      "type": "boolean",
+      "default": false,
+      "required": true
+    },
+    "joinedAt": {
+      "type": "datetime",
+      "required": true
+    }
+  }
+}

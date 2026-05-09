@@ -1,0 +1,54 @@
+{
+  "name": "bolao-copa-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A Strapi application",
+  "packageManager": "yarn@1.22.22",
+  "scripts": {
+    "build": "strapi build",
+    "generate:wc2026": "node scripts/generate-wc2026-data.mjs",
+    "seed:wc2026": "tsx ./src/scripts/seed-wc2026.ts",
+    "seed:wc2026:flags": "tsx ./src/scripts/seed-wc2026.ts --flags",
+    "dev": "strapi develop",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "start": "strapi start",
+    "strapi": "strapi"
+  },
+  "dependencies": {
+    "@strapi/plugin-cloud": "5.45.0",
+    "@strapi/plugin-users-permissions": "5.45.0",
+    "@strapi/strapi": "5.45.0",
+    "pg": "^8.20.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0",
+    "sharp": "0.33.5",
+    "styled-components": "^6.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^10.3.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.59.2"
+  },
+  "resolutions": {
+    "sharp": "0.33.5"
+  },
+  "engines": {
+    "node": ">=20.0.0 <=24.x.x",
+    "yarn": ">=1.22.0"
+  },
+  "strapi": {
+    "uuid": "97655d26-d0b6-40ae-8336-f77bc344750e",
+    "installId": "ec458e5458b70862aff000790a493460155109d85496d87e7648c4004f08c9f8"
+  }
+}

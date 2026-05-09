@@ -1,0 +1,34 @@
+{
+  "kind": "collectionType",
+  "collectionName": "qualification_bets",
+  "info": {
+    "singularName": "qualification-bet",
+    "pluralName": "qualification-bets",
+    "displayName": "QualificationBet",
+    "description": "Palpites de quais seleções se classificam para a fase eliminatória"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "pool": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::pool.pool"
+    },
+    "teams": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::team.team"
+    },
+    "points": {
+      "type": "integer"
+    }
+  }
+}

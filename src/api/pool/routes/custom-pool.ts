@@ -1,0 +1,58 @@
+export default {
+  routes: [
+    {
+      method: 'GET',
+      path: '/pools/mine/memberships',
+      handler: 'custom-pool.myMemberships',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/pools/join',
+      handler: 'custom-pool.join',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/pools/join/:inviteCode',
+      handler: 'custom-pool.join',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/pools/:id/ranking',
+      handler: 'custom-pool.ranking',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/pools/:id/members',
+      handler: 'custom-pool.members',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'PATCH',
+      path: '/pools/:id/members/:userId/payment',
+      handler: 'custom-pool.updatePayment',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+  ],
+};

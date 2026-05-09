@@ -1,0 +1,66 @@
+{
+  "kind": "collectionType",
+  "collectionName": "matches",
+  "info": {
+    "singularName": "match",
+    "pluralName": "matches",
+    "displayName": "Partida",
+    "description": "Partidas da Copa do Mundo 2026"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "homeTeam": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::team.team"
+    },
+    "awayTeam": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::team.team"
+    },
+    "date": {
+      "type": "datetime",
+      "required": true
+    },
+    "venue": {
+      "type": "string",
+      "required": true
+    },
+    "homeScore": {
+      "type": "integer"
+    },
+    "awayScore": {
+      "type": "integer"
+    },
+    "phase": {
+      "type": "enumeration",
+      "enum": ["group", "round_of_32", "round_of_16", "quarter", "semi", "third_place", "final"],
+      "required": true
+    },
+    "group": {
+      "type": "enumeration",
+      "enum": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["scheduled", "live", "finished"],
+      "default": "scheduled",
+      "required": true
+    },
+    "matchNumber": {
+      "type": "integer",
+      "unique": true,
+      "required": true
+    },
+    "bets": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::bet.bet",
+      "mappedBy": "match"
+    }
+  }
+}

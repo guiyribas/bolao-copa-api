@@ -1,0 +1,40 @@
+{
+  "kind": "collectionType",
+  "collectionName": "bets",
+  "info": {
+    "singularName": "bet",
+    "pluralName": "bets",
+    "displayName": "Bet",
+    "description": "Palpites dos participantes para cada partida"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "match": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::match.match",
+      "inversedBy": "bets"
+    },
+    "homeScore": {
+      "type": "integer",
+      "required": true,
+      "min": 0
+    },
+    "awayScore": {
+      "type": "integer",
+      "required": true,
+      "min": 0
+    },
+    "points": {
+      "type": "integer"
+    }
+  }
+}
