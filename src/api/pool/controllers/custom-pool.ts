@@ -1,5 +1,7 @@
 import type { Core } from '@strapi/strapi';
 
+import { isExactScorePoints } from '../../bet/services/scoring';
+
 type AdminLike = { id?: number | string; documentId?: string } | null;
 
 function isPoolAdmin(
@@ -125,7 +127,10 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
       populate: ['user'],
     });
 
-    const rankingMap: Record<string, { userId: string; username: string; points: number }> = {};
+    const rankingMap: Record<
+      string,
+      { userId: string; username: string; points: number; exactHitCount: number }
+    > = {};
 
     for (const m of memberships as any[]) {
       const u = m.user;
@@ -135,6 +140,7 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
         userId: String(u.id),
         username: u.username || String(u.id),
         points: 0,
+        exactHitCount: 0,
       };
     }
 
@@ -145,18 +151,27 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
         filters: {
           $or: memberIds.map((memberId) => ({ user: { id: memberId } })),
         } as any,
-        populate: ['user'],
+        populate: ['user', 'match'],
       });
 
       for (const bet of bets as any[]) {
         if (!bet.user?.id) continue;
         const key = String(bet.user.id);
         if (!rankingMap[key]) continue;
-        rankingMap[key].points += bet.points || 0;
+        const pts = bet.points || 0;
+        rankingMap[key].points += pts;
+        const phase = bet.match?.phase as string | undefined;
+        if (isExactScorePoints(phase, pts)) {
+          rankingMap[key].exactHitCount += 1;
+        }
       }
     }
 
-    const ranking = Object.values(rankingMap).sort((a, b) => b.points - a.points);
+    const ranking = Object.values(rankingMap).sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.exactHitCount !== a.exactHitCount) return b.exactHitCount - a.exactHitCount;
+      return a.username.localeCompare(b.username, 'pt-BR');
+    });
 
     return ctx.send({ data: ranking });
   },
@@ -393,6 +408,183 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
         memberCount,
         paidCount,
         totalCollected,
+      },
+    });
+  },
+
+  /**
+   * Palpites na partida agrupados por bolão em que o utilizador participa.
+   * Palpites de outros membros só são revelados com partida ao vivo ou finalizada;
+   * o próprio utilizador vê sempre o seu palpite.
+   */
+  async poolMatchBets(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be logged in');
+    }
+
+    const matchDocumentId = ctx.params.matchDocumentId as string | undefined;
+    if (!matchDocumentId || String(matchDocumentId).trim() === '') {
+      return ctx.badRequest('matchDocumentId is required');
+    }
+
+    const match = await strapi.documents('api::match.match').findOne({
+      documentId: matchDocumentId,
+    });
+
+    if (!match) {
+      return ctx.notFound('Match not found');
+    }
+
+    const statusRaw = (match as { matchStatus?: string }).matchStatus;
+    const revealed = statusRaw === 'live' || statusRaw === 'finished';
+
+    let userDocumentId = user.documentId as string | undefined;
+    if (!userDocumentId && user.id != null) {
+      const found = await strapi.documents('plugin::users-permissions.user').findMany({
+        filters: { id: user.id },
+        limit: 1,
+      });
+      userDocumentId = found[0]?.documentId;
+    }
+
+    if (!userDocumentId) {
+      return ctx.badRequest('Could not resolve user');
+    }
+
+    const viewerIdStr = user.id != null ? String(user.id) : '';
+
+    const myMemberships = await strapi.documents('api::pool-membership.pool-membership').findMany({
+      filters: {
+        user: { documentId: userDocumentId },
+      },
+      populate: ['pool'],
+    });
+
+    type MembershipRow = {
+      pool?: { documentId?: string; name?: string };
+    };
+
+    const poolDocIds = [
+      ...new Set(
+        (myMemberships as MembershipRow[])
+          .map((m) => m.pool?.documentId)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      ),
+    ];
+
+    const membersByPool = new Map<
+      string,
+      Array<{ id: string; username: string }>
+    >();
+
+    const allMemberNumericIds = new Set<number>();
+
+    for (const poolDocId of poolDocIds) {
+      const mems = await strapi.documents('api::pool-membership.pool-membership').findMany({
+        filters: { pool: { documentId: poolDocId } },
+        populate: ['user'],
+      });
+
+      const rows: Array<{ id: string; username: string }> = [];
+      for (const row of mems as any[]) {
+        const u = row.user;
+        const uid = u?.id;
+        if (uid == null) continue;
+        const idStr = String(uid);
+        rows.push({
+          id: idStr,
+          username: typeof u.username === 'string' && u.username.trim() !== '' ? u.username : idStr,
+        });
+        allMemberNumericIds.add(Number(uid));
+      }
+      rows.sort((a, b) => a.username.localeCompare(b.username, 'pt'));
+      membersByPool.set(poolDocId, rows);
+    }
+
+    const betsByUserId = new Map<
+      string,
+      { homeScore: number; awayScore: number; points: number | null }
+    >();
+
+    const memberIdArray = [...allMemberNumericIds];
+    if (memberIdArray.length > 0) {
+      const bets = await strapi.documents('api::bet.bet').findMany({
+        filters: {
+          match: { documentId: matchDocumentId },
+          $or: memberIdArray.map((memberId) => ({ user: { id: memberId } })),
+        } as any,
+        populate: ['user'],
+      });
+
+      for (const bet of bets as any[]) {
+        const uid = bet.user?.id;
+        if (uid == null) continue;
+        const key = String(uid);
+        betsByUserId.set(key, {
+          homeScore: bet.homeScore,
+          awayScore: bet.awayScore,
+          points: bet.points ?? null,
+        });
+      }
+    }
+
+    const poolsOut: Array<{
+      poolDocumentId: string;
+      poolName: string;
+      entries: Array<{
+        userId: string;
+        username: string;
+        homeScore: number | null;
+        awayScore: number | null;
+        points: number | null;
+        hasBet: boolean;
+        isViewer: boolean;
+      }>;
+    }> = [];
+
+    const seenPoolIds = new Set<string>();
+
+    for (const m of myMemberships as MembershipRow[]) {
+      const pool = m.pool;
+      const poolDocId = pool?.documentId;
+      if (!poolDocId || seenPoolIds.has(poolDocId)) continue;
+      seenPoolIds.add(poolDocId);
+
+      const members = membersByPool.get(poolDocId) ?? [];
+
+      const entries = members.map((mem) => {
+        const isViewer = viewerIdStr !== '' && mem.id === viewerIdStr;
+        const showScores = revealed || isViewer;
+        const bet = betsByUserId.get(mem.id);
+        const hasBetRaw = Boolean(bet);
+        /** Não revelar se outros já palpitaram antes da partida começar. */
+        const hasBet = hasBetRaw && (isViewer || revealed);
+
+        return {
+          userId: mem.id,
+          username: mem.username,
+          homeScore: showScores ? (bet?.homeScore ?? null) : null,
+          awayScore: showScores ? (bet?.awayScore ?? null) : null,
+          points: showScores ? (bet?.points ?? null) : null,
+          hasBet,
+          isViewer,
+        };
+      });
+
+      poolsOut.push({
+        poolDocumentId: poolDocId,
+        poolName: typeof pool?.name === 'string' ? pool.name : 'Bolão',
+        entries,
+      });
+    }
+
+    return ctx.send({
+      data: {
+        matchDocumentId,
+        matchStatus: statusRaw ?? 'scheduled',
+        revealed,
+        pools: poolsOut,
       },
     });
   },

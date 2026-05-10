@@ -2,6 +2,15 @@ export default {
   routes: [
     {
       method: 'GET',
+      path: '/pools/match/:matchDocumentId/bets',
+      handler: 'custom-pool.poolMatchBets',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'GET',
       path: '/pools/mine/memberships',
       handler: 'custom-pool.myMemberships',
       config: {
