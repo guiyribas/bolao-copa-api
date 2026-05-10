@@ -81,4 +81,17 @@ No dev, o React pode disparar cada request **duas vezes** (Strict Mode); não é
 
 ---
 
+### Testes (`yarn test`)
+
+Executa os testes unitários da pontuação (`src/api/bet/services/scoring.test.ts`). Em ambientes restritos, se `tsx` falhar por permissão de IPC, rode o comando com permissões normais de desenvolvimento.
+
+---
+
+## Partidas e placar (admin)
+
+- **Palpites**: a API recusa criar ou atualizar palpite se `matchStatus` for `live` ou `finished`, ou se a hora atual for **igual ou posterior** ao campo `date` da partida (início do jogo). Alinha com a página **Regras e pontuação** no app.
+- **Mata-mata**: ao lançar `homeScore` / `awayScore` no Strapi, use o **resultado final em campo** após tempo regulamentar e prorrogação (quando houver). **Pênaltis** não incrementam o placar mandante × visitante — em jogos decididos nos pênaltis, costuma gravar-se o placar ao fim da prorrogação (ex.: 1×1).
+
+---
+
 <sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>
