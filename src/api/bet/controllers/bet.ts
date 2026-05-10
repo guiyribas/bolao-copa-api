@@ -1,6 +1,6 @@
 import { factories } from '@strapi/strapi';
 
-import { assertMatchAcceptsBet, parseBetScores } from '../services/bet-guards';
+import { assertMatchAcceptsBet, assertUserIsBetOwner, parseBetScores } from '../services/bet-guards';
 
 export default factories.createCoreController('api::bet.bet', ({ strapi }) => ({
   async create(ctx) {
@@ -81,8 +81,9 @@ export default factories.createCoreController('api::bet.bet', ({ strapi }) => ({
     }
 
     const ownerId = (existing as { user?: { id?: number } }).user?.id;
-    if (ownerId == null || Number(ownerId) !== Number(user.id)) {
-      return ctx.forbidden('You can only update your own bets');
+    const ownerGate = assertUserIsBetOwner(user.id, ownerId);
+    if (!ownerGate.ok) {
+      return ctx.forbidden(ownerGate.message);
     }
 
     const body = ctx.request.body?.data || {};

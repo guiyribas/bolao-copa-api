@@ -57,3 +57,17 @@ export function assertMatchAcceptsBet(
   }
   return { ok: true };
 }
+
+/** Só o dono do palpite pode editá-lo. */
+export function assertUserIsBetOwner(
+  requestUserId: number | string,
+  betOwnerId: number | string | null | undefined
+): { ok: true } | { ok: false; message: string } {
+  if (betOwnerId == null || Number(betOwnerId) !== Number(requestUserId)) {
+    return {
+      ok: false,
+      message: 'You can only update your own bets',
+    };
+  }
+  return { ok: true };
+}
