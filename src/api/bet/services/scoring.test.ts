@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { calculatePoints, isExactScorePoints } from './scoring';
+import { calculatePoints, isExactScorePoints, isKnockoutPhase } from './scoring';
 
 describe('calculatePoints', () => {
   const group = { phase: 'group' as const };
@@ -168,5 +168,16 @@ describe('isExactScorePoints', () => {
   it('retorna false para fase não mapeada', () => {
     assert.equal(isExactScorePoints('group_stage', 10), false);
     assert.equal(isExactScorePoints('friendly', 15), false);
+  });
+});
+
+describe('isKnockoutPhase', () => {
+  it('agrupa apenas as fases de mata-mata conhecidas', () => {
+    assert.equal(isKnockoutPhase('group'), false);
+    assert.equal(isKnockoutPhase('round_of_32'), true);
+    assert.equal(isKnockoutPhase('final'), true);
+    assert.equal(isKnockoutPhase('friendly'), false);
+    assert.equal(isKnockoutPhase(null), false);
+    assert.equal(isKnockoutPhase(undefined), false);
   });
 });

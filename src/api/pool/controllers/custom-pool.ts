@@ -1,6 +1,6 @@
 import type { Core } from '@strapi/strapi';
 
-import { isExactScorePoints } from '../../bet/services/scoring';
+import { isExactScorePoints, isKnockoutPhase } from '../../bet/services/scoring';
 
 type AdminLike = { id?: number | string; documentId?: string } | null;
 
@@ -129,7 +129,14 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
 
     const rankingMap: Record<
       string,
-      { userId: string; username: string; points: number; exactHitCount: number }
+      {
+        userId: string;
+        username: string;
+        points: number;
+        pointsGroupPhase: number;
+        pointsKnockout: number;
+        exactHitCount: number;
+      }
     > = {};
 
     for (const m of memberships as any[]) {
@@ -140,6 +147,8 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
         userId: String(u.id),
         username: u.username || String(u.id),
         points: 0,
+        pointsGroupPhase: 0,
+        pointsKnockout: 0,
         exactHitCount: 0,
       };
     }
@@ -161,6 +170,11 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
         const pts = bet.points || 0;
         rankingMap[key].points += pts;
         const phase = bet.match?.phase as string | undefined;
+        if (isKnockoutPhase(phase)) {
+          rankingMap[key].pointsKnockout += pts;
+        } else {
+          rankingMap[key].pointsGroupPhase += pts;
+        }
         if (isExactScorePoints(phase, pts)) {
           rankingMap[key].exactHitCount += 1;
         }

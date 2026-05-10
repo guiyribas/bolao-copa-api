@@ -27,6 +27,12 @@ export const KNOCKOUT_PHASES = [
   'final',
 ] as const;
 
+/** Mesma lógica de `calculatePoints`: fases listadas em `KNOCKOUT_PHASES` usam tabela de mata-mata; demais (ex.: `group`) usam grupos. */
+export function isKnockoutPhase(phase: string | undefined | null): boolean {
+  if (phase == null) return false;
+  return (KNOCKOUT_PHASES as readonly string[]).includes(phase);
+}
+
 /** True quando os pontos gravados correspondem à regra “placar exato” para a fase. */
 export function isExactScorePoints(
   phase: string | undefined | null,
