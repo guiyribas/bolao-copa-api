@@ -543,6 +543,53 @@ export interface ApiMatchMatch extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiPoolLeadPoolLead extends Struct.CollectionTypeSchema {
+  collectionName: 'pool_leads';
+  info: {
+    description: 'Solicita\u00E7\u00F5es p\u00FAblicas para cria\u00E7\u00E3o de novos bol\u00F5es';
+    displayName: 'Pedido de bol\u00E3o';
+    pluralName: 'pool-leads';
+    singularName: 'pool-lead';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    adminEmail: Schema.Attribute.Email & Schema.Attribute.Required;
+    adminName: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::pool-lead.pool-lead'
+    > &
+      Schema.Attribute.Private;
+    poolDescription: Schema.Attribute.Text;
+    poolName: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }>;
+    poolValue: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiPoolMembershipPoolMembership
   extends Struct.CollectionTypeSchema {
   collectionName: 'pool_memberships';
@@ -1177,6 +1224,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::bet.bet': ApiBetBet;
       'api::match.match': ApiMatchMatch;
+      'api::pool-lead.pool-lead': ApiPoolLeadPoolLead;
       'api::pool-membership.pool-membership': ApiPoolMembershipPoolMembership;
       'api::pool.pool': ApiPoolPool;
       'api::team.team': ApiTeamTeam;

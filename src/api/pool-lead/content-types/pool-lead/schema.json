@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pool_leads",
+  "info": {
+    "singularName": "pool-lead",
+    "pluralName": "pool-leads",
+    "displayName": "Pedido de bolão",
+    "description": "Solicitações públicas para criação de novos bolões"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "poolName": {
+      "type": "string",
+      "required": true,
+      "maxLength": 200
+    },
+    "poolDescription": {
+      "type": "text"
+    },
+    "poolValue": {
+      "type": "decimal",
+      "required": false,
+      "min": 0
+    },
+    "adminName": {
+      "type": "string",
+      "required": true,
+      "maxLength": 200
+    },
+    "adminEmail": {
+      "type": "email",
+      "required": true
+    }
+  }
+}
