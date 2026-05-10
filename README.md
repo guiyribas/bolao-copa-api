@@ -63,7 +63,7 @@ Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/
 Confira no **Strapi Admin** se as permissões do plugin **Users & Permissions** estão corretas:
 
 - **Public**: habilite **find** em **Pool** (para o app resolver o bolão pelo `inviteCode` sem login).
-- **Authenticated**: habilite em **Pool** as ações **join** (`POST /api/pools/join`) e **myMemberships** (`GET /api/pools/mine/memberships` — evita `filters[user]` no REST, que o Strapi 5 rejeita). Mantenha **find** em **pool-memberships** se precisar de outros endpoints desse tipo.
+- **Authenticated**: habilite em **Pool** as ações **join** (`POST /api/pools/join`) e **myMemberships** (`GET /api/pools/mine/memberships`; evita `filters[user]` no REST, que o Strapi 5 rejeita). Mantenha **find** em **pool-memberships** se precisar de outros endpoints desse tipo.
 
 Sem isso, o convite pode falhar com 403/401 mesmo após corrigir o código.
 
