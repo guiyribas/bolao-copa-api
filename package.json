@@ -9,6 +9,7 @@
     "generate:wc2026": "node scripts/generate-wc2026-data.mjs",
     "seed:wc2026": "tsx ./src/scripts/seed-wc2026.ts",
     "seed:wc2026:flags": "tsx ./src/scripts/seed-wc2026.ts --flags",
+    "simulate:wc2026:groups": "tsx ./src/scripts/simulate-wc2026-group-stage.ts",
     "dev": "strapi develop",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

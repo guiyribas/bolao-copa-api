@@ -8,57 +8,57 @@
   "teams": [
     {
       "group": "A",
-      "name": "Mexico",
+      "name": "México",
       "code": "MEX"
     },
     {
       "group": "A",
-      "name": "South Africa",
+      "name": "África do Sul",
       "code": "RSA"
     },
     {
       "group": "A",
-      "name": "Korea Republic",
+      "name": "Coreia do Sul",
       "code": "KOR"
     },
     {
       "group": "A",
-      "name": "Czechia",
+      "name": "Chéquia",
       "code": "CZE"
     },
     {
       "group": "B",
-      "name": "Canada",
+      "name": "Canadá",
       "code": "CAN"
     },
     {
       "group": "B",
-      "name": "Switzerland",
+      "name": "Suíça",
       "code": "SUI"
     },
     {
       "group": "B",
-      "name": "Qatar",
+      "name": "Catar",
       "code": "QAT"
     },
     {
       "group": "B",
-      "name": "Bosnia and Herzegovina",
+      "name": "Bósnia e Herzegovina",
       "code": "BIH"
     },
     {
       "group": "C",
-      "name": "Brazil",
+      "name": "Brasil",
       "code": "BRA"
     },
     {
       "group": "C",
-      "name": "Morocco",
+      "name": "Marrocos",
       "code": "MAR"
     },
     {
       "group": "C",
-      "name": "Scotland",
+      "name": "Escócia",
       "code": "SCO"
     },
     {
@@ -68,37 +68,37 @@
     },
     {
       "group": "D",
-      "name": "United States",
+      "name": "Estados Unidos",
       "code": "USA"
     },
     {
       "group": "D",
-      "name": "Australia",
+      "name": "Austrália",
       "code": "AUS"
     },
     {
       "group": "D",
-      "name": "Paraguay",
+      "name": "Paraguai",
       "code": "PAR"
     },
     {
       "group": "D",
-      "name": "Turkey",
+      "name": "Turquia",
       "code": "TUR"
     },
     {
       "group": "E",
-      "name": "Germany",
+      "name": "Alemanha",
       "code": "GER"
     },
     {
       "group": "E",
-      "name": "Ecuador",
+      "name": "Equador",
       "code": "ECU"
     },
     {
       "group": "E",
-      "name": "Côte d'Ivoire",
+      "name": "Costa do Marfim",
       "code": "CIV"
     },
     {
@@ -108,57 +108,57 @@
     },
     {
       "group": "F",
-      "name": "Netherlands",
+      "name": "Holanda",
       "code": "NED"
     },
     {
       "group": "F",
-      "name": "Japan",
+      "name": "Japão",
       "code": "JPN"
     },
     {
       "group": "F",
-      "name": "Tunisia",
+      "name": "Tunísia",
       "code": "TUN"
     },
     {
       "group": "F",
-      "name": "Sweden",
+      "name": "Suécia",
       "code": "SWE"
     },
     {
       "group": "G",
-      "name": "Belgium",
+      "name": "Bélgica",
       "code": "BEL"
     },
     {
       "group": "G",
-      "name": "Iran",
+      "name": "Irã",
       "code": "IRN"
     },
     {
       "group": "G",
-      "name": "Egypt",
+      "name": "Egito",
       "code": "EGY"
     },
     {
       "group": "G",
-      "name": "New Zealand",
+      "name": "Nova Zelândia",
       "code": "NZL"
     },
     {
       "group": "H",
-      "name": "Spain",
+      "name": "Espanha",
       "code": "ESP"
     },
     {
       "group": "H",
-      "name": "Uruguay",
+      "name": "Uruguai",
       "code": "URU"
     },
     {
       "group": "H",
-      "name": "Saudi Arabia",
+      "name": "Arábia Saudita",
       "code": "KSA"
     },
     {
@@ -168,7 +168,7 @@
     },
     {
       "group": "I",
-      "name": "France",
+      "name": "França",
       "code": "FRA"
     },
     {
@@ -178,12 +178,12 @@
     },
     {
       "group": "I",
-      "name": "Norway",
+      "name": "Noruega",
       "code": "NOR"
     },
     {
       "group": "I",
-      "name": "Iraq",
+      "name": "Iraque",
       "code": "IRQ"
     },
     {
@@ -193,17 +193,17 @@
     },
     {
       "group": "J",
-      "name": "Algeria",
+      "name": "Argélia",
       "code": "ALG"
     },
     {
       "group": "J",
-      "name": "Austria",
+      "name": "Áustria",
       "code": "AUT"
     },
     {
       "group": "J",
-      "name": "Jordan",
+      "name": "Jordânia",
       "code": "JOR"
     },
     {
@@ -213,37 +213,37 @@
     },
     {
       "group": "K",
-      "name": "Colombia",
+      "name": "Colômbia",
       "code": "COL"
     },
     {
       "group": "K",
-      "name": "Uzbekistan",
+      "name": "Uzbequistão",
       "code": "UZB"
     },
     {
       "group": "K",
-      "name": "Congo DR",
+      "name": "RD Congo",
       "code": "COD"
     },
     {
       "group": "L",
-      "name": "England",
+      "name": "Inglaterra",
       "code": "ENG"
     },
     {
       "group": "L",
-      "name": "Croatia",
+      "name": "Croácia",
       "code": "CRO"
     },
     {
       "group": "L",
-      "name": "Panama",
+      "name": "Panamá",
       "code": "PAN"
     },
     {
       "group": "L",
-      "name": "Ghana",
+      "name": "Gana",
       "code": "GHA"
     }
   ],
