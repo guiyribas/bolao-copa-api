@@ -122,18 +122,6 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
       }
     }
 
-    const qualificationBets = await strapi.documents('api::qualification-bet.qualification-bet').findMany({
-      filters: { pool: { documentId: id } },
-      populate: ['user'],
-    });
-
-    for (const qBet of qualificationBets as any[]) {
-      if (!qBet.user?.id) continue;
-      const key = String(qBet.user.id);
-      if (!rankingMap[key]) continue;
-      rankingMap[key].points += qBet.points || 0;
-    }
-
     const ranking = Object.values(rankingMap).sort((a, b) => b.points - a.points);
 
     return ctx.send({ data: ranking });

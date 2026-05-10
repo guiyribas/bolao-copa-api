@@ -622,42 +622,6 @@ export interface ApiPoolPool extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiQualificationBetQualificationBet
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'qualification_bets';
-  info: {
-    description: 'Palpites de quais sele\u00E7\u00F5es se classificam para a fase eliminat\u00F3ria';
-    displayName: 'QualificationBet';
-    pluralName: 'qualification-bets';
-    singularName: 'qualification-bet';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::qualification-bet.qualification-bet'
-    > &
-      Schema.Attribute.Private;
-    points: Schema.Attribute.Integer;
-    pool: Schema.Attribute.Relation<'manyToOne', 'api::pool.pool'>;
-    publishedAt: Schema.Attribute.DateTime;
-    teams: Schema.Attribute.Relation<'oneToMany', 'api::team.team'>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    user: Schema.Attribute.Relation<
-      'manyToOne',
-      'plugin::users-permissions.user'
-    >;
-  };
-}
-
 export interface ApiTeamTeam extends Struct.CollectionTypeSchema {
   collectionName: 'teams';
   info: {
@@ -1212,7 +1176,6 @@ declare module '@strapi/strapi' {
       'api::match.match': ApiMatchMatch;
       'api::pool-membership.pool-membership': ApiPoolMembershipPoolMembership;
       'api::pool.pool': ApiPoolPool;
-      'api::qualification-bet.qualification-bet': ApiQualificationBetQualificationBet;
       'api::team.team': ApiTeamTeam;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

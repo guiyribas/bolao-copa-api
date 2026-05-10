@@ -27,8 +27,6 @@ const KNOCKOUT_PHASES = [
   'final',
 ];
 
-const QUALIFICATION_POINTS_PER_TEAM = 3;
-
 interface MatchResult {
   homeScore: number;
   awayScore: number;
@@ -87,18 +85,8 @@ export function calculatePoints(bet: BetPrediction, match: MatchResult): number 
   return points.WINNER_ONLY;
 }
 
-export function calculateQualificationPoints(
-  predictedTeamIds: number[],
-  qualifiedTeamIds: number[]
-): number {
-  const correctPicks = predictedTeamIds.filter((id) => qualifiedTeamIds.includes(id));
-  return correctPicks.length * QUALIFICATION_POINTS_PER_TEAM;
-}
-
 export default {
   calculatePoints,
-  calculateQualificationPoints,
   POINTS_GROUP,
   POINTS_KNOCKOUT,
-  QUALIFICATION_POINTS_PER_TEAM,
 };
