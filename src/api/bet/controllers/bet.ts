@@ -16,7 +16,7 @@ export default factories.createCoreController('api::bet.bet', ({ strapi }) => ({
     }
 
     const parsed = parseBetScores(homeScore, awayScore);
-    if (!parsed.ok) {
+    if (parsed.ok === false) {
       return ctx.badRequest(parsed.message);
     }
 
@@ -29,7 +29,7 @@ export default factories.createCoreController('api::bet.bet', ({ strapi }) => ({
     }
 
     const gate = assertMatchAcceptsBet(match as { date?: string; matchStatus?: string | null });
-    if (!gate.ok) {
+    if (gate.ok === false) {
       return ctx.badRequest(gate.message);
     }
 
@@ -82,7 +82,7 @@ export default factories.createCoreController('api::bet.bet', ({ strapi }) => ({
 
     const ownerId = (existing as { user?: { id?: number } }).user?.id;
     const ownerGate = assertUserIsBetOwner(user.id, ownerId);
-    if (!ownerGate.ok) {
+    if (ownerGate.ok === false) {
       return ctx.forbidden(ownerGate.message);
     }
 
@@ -91,7 +91,7 @@ export default factories.createCoreController('api::bet.bet', ({ strapi }) => ({
     const awayScore = body.awayScore ?? (existing as { awayScore?: number }).awayScore;
 
     const parsed = parseBetScores(homeScore, awayScore);
-    if (!parsed.ok) {
+    if (parsed.ok === false) {
       return ctx.badRequest(parsed.message);
     }
 
@@ -118,7 +118,7 @@ export default factories.createCoreController('api::bet.bet', ({ strapi }) => ({
     }
 
     const gate = assertMatchAcceptsBet(match);
-    if (!gate.ok) {
+    if (gate.ok === false) {
       return ctx.badRequest(gate.message);
     }
 
