@@ -36,6 +36,75 @@ async function resolveUsersPermissionsUser(
   return { ...user, documentId };
 }
 
+type PoolRankRow = {
+  userId: string;
+  username: string;
+  points: number;
+  pointsGroupPhase: number;
+  pointsKnockout: number;
+  exactHitCount: number;
+};
+
+async function computePoolRanking(
+  strapi: Core.Strapi,
+  poolDocumentId: string
+): Promise<PoolRankRow[]> {
+  const memberships = await strapi.documents('api::pool-membership.pool-membership').findMany({
+    filters: { pool: { documentId: poolDocumentId } },
+    populate: ['user'],
+  });
+
+  const rankingMap: Record<string, PoolRankRow> = {};
+
+  for (const m of memberships as any[]) {
+    const u = m.user;
+    if (!u?.id) continue;
+    const key = String(u.id);
+    rankingMap[key] = {
+      userId: String(u.id),
+      username: u.username || String(u.id),
+      points: 0,
+      pointsGroupPhase: 0,
+      pointsKnockout: 0,
+      exactHitCount: 0,
+    };
+  }
+
+  const memberIds = Object.keys(rankingMap).map((k) => Number(k));
+
+  if (memberIds.length > 0) {
+    const bets = await strapi.documents('api::bet.bet').findMany({
+      filters: {
+        $or: memberIds.map((memberId) => ({ user: { id: memberId } })),
+      } as any,
+      populate: ['user', 'match'],
+    });
+
+    for (const bet of bets as any[]) {
+      if (!bet.user?.id) continue;
+      const key = String(bet.user.id);
+      if (!rankingMap[key]) continue;
+      const pts = bet.points || 0;
+      rankingMap[key].points += pts;
+      const phase = bet.match?.phase as string | undefined;
+      if (isKnockoutPhase(phase)) {
+        rankingMap[key].pointsKnockout += pts;
+      } else {
+        rankingMap[key].pointsGroupPhase += pts;
+      }
+      if (isExactScorePoints(phase, pts)) {
+        rankingMap[key].exactHitCount += 1;
+      }
+    }
+  }
+
+  return Object.values(rankingMap).sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.exactHitCount !== a.exactHitCount) return b.exactHitCount - a.exactHitCount;
+    return a.username.localeCompare(b.username, 'pt-BR');
+  });
+}
+
 const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
   /**
    * Lista memberships do usuário logado. O REST genérico não aceita
@@ -64,10 +133,46 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
       filters: {
         user: { documentId: userDocumentId },
       },
-      populate: ['pool'],
+      populate: ['pool', 'user'],
     });
 
-    return ctx.send({ data: memberships });
+    const populatedUserId = (memberships[0] as { user?: { id?: number } } | undefined)?.user?.id;
+    let viewerIdStr: string | null =
+      populatedUserId != null ? String(populatedUserId) : user.id != null ? String(user.id) : null;
+    if (viewerIdStr == null && userDocumentId) {
+      const fu = await strapi.documents('plugin::users-permissions.user').findMany({
+        filters: { documentId: userDocumentId },
+        limit: 1,
+      });
+      viewerIdStr = fu[0]?.id != null ? String(fu[0].id) : null;
+    }
+
+    const poolDocumentIds = [
+      ...new Set(
+        (memberships as { pool?: { documentId?: string } }[])
+          .map((m) => m.pool?.documentId)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      ),
+    ];
+
+    const rankings = await Promise.all(
+      poolDocumentIds.map(async (pid) => [pid, await computePoolRanking(strapi, pid)] as const)
+    );
+    const rankingByPool = new Map<string, PoolRankRow[]>(rankings);
+
+    const data = (memberships as any[]).map((m) => {
+      const pid = m.pool?.documentId as string | undefined;
+      const ranking = pid ? rankingByPool.get(pid) ?? [] : [];
+      const idx =
+        viewerIdStr != null ? ranking.findIndex((r) => r.userId === viewerIdStr) : -1;
+      return {
+        ...m,
+        rankingPlace: idx >= 0 ? idx + 1 : null,
+        rankingTotal: ranking.length,
+      };
+    });
+
+    return ctx.send({ data });
   },
 
   async join(ctx) {
@@ -121,72 +226,7 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
     }
 
     const { id } = ctx.params;
-
-    const memberships = await strapi.documents('api::pool-membership.pool-membership').findMany({
-      filters: { pool: { documentId: id } },
-      populate: ['user'],
-    });
-
-    const rankingMap: Record<
-      string,
-      {
-        userId: string;
-        username: string;
-        points: number;
-        pointsGroupPhase: number;
-        pointsKnockout: number;
-        exactHitCount: number;
-      }
-    > = {};
-
-    for (const m of memberships as any[]) {
-      const u = m.user;
-      if (!u?.id) continue;
-      const key = String(u.id);
-      rankingMap[key] = {
-        userId: String(u.id),
-        username: u.username || String(u.id),
-        points: 0,
-        pointsGroupPhase: 0,
-        pointsKnockout: 0,
-        exactHitCount: 0,
-      };
-    }
-
-    const memberIds = Object.keys(rankingMap).map((k) => Number(k));
-
-    if (memberIds.length > 0) {
-      const bets = await strapi.documents('api::bet.bet').findMany({
-        filters: {
-          $or: memberIds.map((memberId) => ({ user: { id: memberId } })),
-        } as any,
-        populate: ['user', 'match'],
-      });
-
-      for (const bet of bets as any[]) {
-        if (!bet.user?.id) continue;
-        const key = String(bet.user.id);
-        if (!rankingMap[key]) continue;
-        const pts = bet.points || 0;
-        rankingMap[key].points += pts;
-        const phase = bet.match?.phase as string | undefined;
-        if (isKnockoutPhase(phase)) {
-          rankingMap[key].pointsKnockout += pts;
-        } else {
-          rankingMap[key].pointsGroupPhase += pts;
-        }
-        if (isExactScorePoints(phase, pts)) {
-          rankingMap[key].exactHitCount += 1;
-        }
-      }
-    }
-
-    const ranking = Object.values(rankingMap).sort((a, b) => {
-      if (b.points !== a.points) return b.points - a.points;
-      if (b.exactHitCount !== a.exactHitCount) return b.exactHitCount - a.exactHitCount;
-      return a.username.localeCompare(b.username, 'pt-BR');
-    });
-
+    const ranking = await computePoolRanking(strapi, id);
     return ctx.send({ data: ranking });
   },
 
