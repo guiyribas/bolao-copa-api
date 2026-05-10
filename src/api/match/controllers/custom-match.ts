@@ -8,7 +8,7 @@ const customMatch = ({ strapi }: { strapi: Core.Strapi }) => ({
     }
 
     const { id } = ctx.params;
-    const { homeScore, awayScore, status } = ctx.request.body;
+    const { homeScore, awayScore, matchStatus } = ctx.request.body;
 
     if (homeScore == null || awayScore == null) {
       return ctx.badRequest('homeScore and awayScore are required');
@@ -23,7 +23,7 @@ const customMatch = ({ strapi }: { strapi: Core.Strapi }) => ({
       data: {
         homeScore,
         awayScore,
-        status: status || 'finished',
+        matchStatus: matchStatus || 'finished',
       } as any,
     });
 

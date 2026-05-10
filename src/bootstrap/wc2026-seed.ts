@@ -34,6 +34,18 @@ async function loadFixtures(): Promise<FixturesFile> {
   return JSON.parse(raw) as FixturesFile;
 }
 
+function matchTitleFromFixture(m: FixtureMatch, codeToName: Record<string, string>): string {
+  const home = m.homeCode ? codeToName[m.homeCode] : undefined;
+  const away = m.awayCode ? codeToName[m.awayCode] : undefined;
+  if (home && away) {
+    return `${home} x ${away}`;
+  }
+  if (m.slotLabel) {
+    return m.slotLabel;
+  }
+  return `Partida ${m.matchNumber}`;
+}
+
 /** Upserts 48 seleções + 104 partidas a partir de `data/world-cup-2026-fixtures.json` (idempotente). */
 export async function seedWorldCup2026(strapi: Core.Strapi): Promise<void> {
   let data: FixturesFile;
@@ -87,34 +99,48 @@ export async function seedWorldCup2026(strapi: Core.Strapi): Promise<void> {
     }
   }
 
+  const codeToName = Object.fromEntries(data.teams.map((t) => [t.code, t.name]));
+
   for (const m of data.matches) {
     const homeDoc = m.homeCode ? codeToDocumentId[m.homeCode] : undefined;
     const awayDoc = m.awayCode ? codeToDocumentId[m.awayCode] : undefined;
 
-    const payload: Record<string, unknown> = {
+    // Campos seguros de re-sincronizar a cada execução do seed.
+    const updatePayload: Record<string, unknown> = {
+      title: matchTitleFromFixture(m, codeToName),
       matchNumber: m.matchNumber,
       phase: m.phase,
       date: m.date,
       venue: m.venue,
-      status: 'scheduled',
       homeTeam: homeDoc ?? null,
       awayTeam: awayDoc ?? null,
       group: m.group ?? null,
     };
 
-    const existingMatch = await strapi.documents('api::match.match').findMany({
+    const existingMatch = (await strapi.documents('api::match.match').findMany({
       filters: { matchNumber: m.matchNumber },
       limit: 1,
-    });
+    })) as Array<{ documentId: string; matchStatus?: string | null }>;
 
     if (existingMatch.length > 0) {
+      // Backfill: se a partida está sem status (legado), seta como 'scheduled'.
+      // Caso contrário preserva o status atual (admin tem precedência).
+      const current = existingMatch[0];
+      const finalPayload: Record<string, unknown> = { ...updatePayload };
+      if (current.matchStatus == null || current.matchStatus === '') {
+        finalPayload.matchStatus = 'scheduled';
+      }
+
       await strapi.documents('api::match.match').update({
-        documentId: existingMatch[0].documentId,
-        data: payload as never,
+        documentId: current.documentId,
+        data: finalPayload as never,
       });
     } else {
       await strapi.documents('api::match.match').create({
-        data: payload as never,
+        data: {
+          ...updatePayload,
+          matchStatus: 'scheduled',
+        } as never,
       });
     }
   }

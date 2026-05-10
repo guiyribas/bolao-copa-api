@@ -517,6 +517,11 @@ export interface ApiMatchMatch extends Struct.CollectionTypeSchema {
     matchNumber: Schema.Attribute.Integer &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
+    matchStatus: Schema.Attribute.Enumeration<
+      ['scheduled', 'live', 'finished']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'scheduled'>;
     phase: Schema.Attribute.Enumeration<
       [
         'group',
@@ -530,9 +535,7 @@ export interface ApiMatchMatch extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
-    status: Schema.Attribute.Enumeration<['scheduled', 'live', 'finished']> &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'scheduled'>;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

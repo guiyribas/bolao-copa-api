@@ -89,13 +89,13 @@ async function main() {
         data: {
           homeScore,
           awayScore,
-          status: 'finished',
+          matchStatus: 'finished',
         } as never,
       });
       updated++;
     }
 
-    console.log(`[simulate-wc2026-groups] Concluído: ${updated} partidas atualizadas (status finished).`);
+    console.log(`[simulate-wc2026-groups] Concluído: ${updated} partidas atualizadas (matchStatus finished).`);
   } finally {
     await app.destroy().catch((err: unknown) => {
       console.error('[simulate-wc2026-groups] destroy:', err);

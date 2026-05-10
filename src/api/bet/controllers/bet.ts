@@ -21,7 +21,7 @@ export default factories.createCoreController('api::bet.bet', ({ strapi }) => ({
       return ctx.notFound('Match not found');
     }
 
-    if (match.status === 'finished') {
+    if ((match as any).matchStatus === 'finished') {
       return ctx.badRequest('Não é possível alterar o palpite após o jogo finalizado.');
     }
 
