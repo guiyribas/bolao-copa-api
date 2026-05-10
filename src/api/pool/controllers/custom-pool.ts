@@ -1,5 +1,39 @@
 import type { Core } from '@strapi/strapi';
 
+type AdminLike = { id?: number | string; documentId?: string } | null;
+
+function isPoolAdmin(
+  pool: { admin?: AdminLike },
+  user: { id?: number | string; documentId?: string } | null | undefined
+): boolean {
+  if (!user) return false;
+  const a = pool.admin;
+  if (!a) return false;
+  if (a.id != null && user.id != null && Number(a.id) === Number(user.id)) {
+    return true;
+  }
+  if (a.documentId && user.documentId && a.documentId === user.documentId) {
+    return true;
+  }
+  return false;
+}
+
+/** JWT pode não trazer `documentId`; alinha com o utilizador em BD para comparar com `pool.admin`. */
+async function resolveUsersPermissionsUser(
+  strapi: Core.Strapi,
+  user: { id?: number | string; documentId?: string }
+): Promise<{ id?: number | string; documentId?: string }> {
+  let documentId = user.documentId as string | undefined;
+  if (!documentId && user.id != null) {
+    const found = await strapi.documents('plugin::users-permissions.user').findMany({
+      filters: { id: user.id },
+      limit: 1,
+    });
+    documentId = found[0]?.documentId;
+  }
+  return { ...user, documentId };
+}
+
 const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
   /**
    * Lista memberships do usuário logado. O REST genérico não aceita
@@ -144,7 +178,8 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
       return ctx.notFound('Pool not found');
     }
 
-    if (pool.admin?.id !== user.id) {
+    const resolvedUser = await resolveUsersPermissionsUser(strapi, user);
+    if (!isPoolAdmin(pool, resolvedUser)) {
       return ctx.forbidden('Only the pool admin can view members');
     }
 
@@ -184,7 +219,8 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
       return ctx.notFound('Pool not found');
     }
 
-    if (pool.admin?.id !== user.id) {
+    const resolvedUser = await resolveUsersPermissionsUser(strapi, user);
+    if (!isPoolAdmin(pool, resolvedUser)) {
       return ctx.forbidden('Only the pool admin can update payment status');
     }
 
@@ -205,6 +241,160 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
     });
 
     return ctx.send({ data: updated });
+  },
+
+  async updatePoolSettings(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be logged in');
+    }
+
+    const { id } = ctx.params;
+    const body = ctx.request.body as {
+      name?: unknown;
+      description?: unknown;
+      value?: unknown;
+    };
+
+    const pool = await strapi.documents('api::pool.pool').findOne({
+      documentId: id,
+      populate: ['admin'],
+    });
+
+    if (!pool) {
+      return ctx.notFound('Pool not found');
+    }
+
+    const resolvedUser = await resolveUsersPermissionsUser(strapi, user);
+    if (!isPoolAdmin(pool, resolvedUser)) {
+      return ctx.forbidden('Only the pool admin can update pool settings');
+    }
+
+    const data: Record<string, unknown> = {};
+    if (Object.prototype.hasOwnProperty.call(body, 'name')) {
+      if (typeof body.name !== 'string' || body.name.trim() === '') {
+        return ctx.badRequest('Pool name is required when provided');
+      }
+      data.name = body.name.trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'description')) {
+      if (body.description === null || body.description === undefined) {
+        data.description = null;
+      } else if (typeof body.description === 'string') {
+        data.description = body.description;
+      } else {
+        return ctx.badRequest('Invalid description');
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'value')) {
+      const raw = body.value;
+      const num =
+        typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN;
+      if (Number.isNaN(num) || num < 0) {
+        return ctx.badRequest('A valid non-negative pool value is required when provided');
+      }
+      data.value = num;
+    }
+
+    if (Object.keys(data).length === 0) {
+      return ctx.badRequest('No updatable fields provided');
+    }
+
+    const updated = await strapi.documents('api::pool.pool').update({
+      documentId: id,
+      data: data as any,
+    });
+
+    return ctx.send({ data: updated });
+  },
+
+  /**
+   * Dados do bolão para a sessão atual + `isAdmin` calculado no servidor.
+   * Evita depender do populate REST do `admin` (permissões do plugin User podem omitir a relação na UI).
+   */
+  async poolSession(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be logged in');
+    }
+
+    const { id } = ctx.params;
+
+    const pool = await strapi.documents('api::pool.pool').findOne({
+      documentId: id,
+      populate: ['admin'],
+    });
+
+    if (!pool) {
+      return ctx.notFound('Pool not found');
+    }
+
+    const resolvedUser = await resolveUsersPermissionsUser(strapi, user);
+    const isAdmin = isPoolAdmin(pool, resolvedUser);
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const inviteLink = pool.inviteCode
+      ? `${frontendUrl}/invite/${pool.inviteCode}`
+      : null;
+
+    const rawAdmin = pool.admin as {
+      id?: number | string;
+      documentId?: string;
+      username?: string;
+      email?: string;
+    } | null;
+
+    const idNum = (v: unknown) => {
+      if (v == null) return 0;
+      const n = Number(v);
+      return Number.isNaN(n) ? 0 : n;
+    };
+
+    const valueRaw = pool.value;
+    const valueNum =
+      typeof valueRaw === 'number'
+        ? valueRaw
+        : typeof valueRaw === 'string'
+          ? Number(valueRaw)
+          : 0;
+
+    const admin =
+      rawAdmin != null
+        ? {
+            id: idNum(rawAdmin.id),
+            documentId: rawAdmin.documentId,
+            username: rawAdmin.username ?? '',
+            email: rawAdmin.email ?? '',
+          }
+        : undefined;
+
+    const memberships = await strapi
+      .documents('api::pool-membership.pool-membership')
+      .findMany({
+        filters: { pool: { documentId: id } },
+        fields: ['hasPaid'],
+      });
+
+    const memberCount = memberships.length;
+    const paidCount = memberships.filter((m) => Boolean(m.hasPaid)).length;
+    const safeValue = Number.isNaN(valueNum) ? 0 : valueNum;
+    const totalCollected = paidCount * safeValue;
+
+    return ctx.send({
+      data: {
+        documentId: pool.documentId,
+        name: pool.name,
+        description: pool.description ?? '',
+        value: safeValue,
+        inviteCode: pool.inviteCode ?? '',
+        inviteLink,
+        admin,
+        isAdmin,
+        memberCount,
+        paidCount,
+        totalCollected,
+      },
+    });
   },
 });
 

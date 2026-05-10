@@ -18,5 +18,15 @@ export default {
         middlewares: [],
       },
     },
+    {
+      method: 'GET',
+      path: '/bets/by-username/:username/public',
+      handler: 'custom-bet.publicBetsByUsername',
+      config: {
+        auth: false,
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };

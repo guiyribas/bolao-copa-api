@@ -38,6 +38,15 @@ export default {
     },
     {
       method: 'GET',
+      path: '/pools/:id/session',
+      handler: 'custom-pool.poolSession',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'GET',
       path: '/pools/:id/members',
       handler: 'custom-pool.members',
       config: {
@@ -49,6 +58,15 @@ export default {
       method: 'PATCH',
       path: '/pools/:id/members/:userId/payment',
       handler: 'custom-pool.updatePayment',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'PATCH',
+      path: '/pools/:id/settings',
+      handler: 'custom-pool.updatePoolSettings',
       config: {
         policies: [],
         middlewares: [],
