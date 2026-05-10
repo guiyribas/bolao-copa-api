@@ -21,10 +21,8 @@ export default factories.createCoreController('api::bet.bet', ({ strapi }) => ({
       return ctx.notFound('Match not found');
     }
 
-    const now = new Date();
-    const matchDate = new Date(match.date);
-    if (now >= matchDate) {
-      return ctx.badRequest('Bet deadline has passed. Match has already started.');
+    if (match.status === 'finished') {
+      return ctx.badRequest('Não é possível alterar o palpite após o jogo finalizado.');
     }
 
     const existingBets = await strapi.documents('api::bet.bet').findMany({
