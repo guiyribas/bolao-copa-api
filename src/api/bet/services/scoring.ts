@@ -18,14 +18,27 @@ const POINTS_KNOCKOUT = {
   MISS: 0,
 };
 
-const KNOCKOUT_PHASES = [
+export const KNOCKOUT_PHASES = [
   'round_of_32',
   'round_of_16',
   'quarter',
   'semi',
   'third_place',
   'final',
-];
+] as const;
+
+/** True quando os pontos gravados correspondem à regra “placar exato” para a fase. */
+export function isExactScorePoints(
+  phase: string | undefined | null,
+  points: number | null | undefined
+): boolean {
+  if (points == null || phase == null) return false;
+  if (phase === 'group') return points === POINTS_GROUP.EXACT_SCORE;
+  if (KNOCKOUT_PHASES.includes(phase as (typeof KNOCKOUT_PHASES)[number])) {
+    return points === POINTS_KNOCKOUT.EXACT_SCORE;
+  }
+  return false;
+}
 
 interface MatchResult {
   homeScore: number;
@@ -45,7 +58,9 @@ function getWinner(home: number, away: number): 'home' | 'away' | 'draw' {
 }
 
 export function calculatePoints(bet: BetPrediction, match: MatchResult): number {
-  const points = KNOCKOUT_PHASES.includes(match.phase) ? POINTS_KNOCKOUT : POINTS_GROUP;
+  const points = (KNOCKOUT_PHASES as readonly string[]).includes(match.phase)
+    ? POINTS_KNOCKOUT
+    : POINTS_GROUP;
 
   const betWinner = getWinner(bet.homeScore, bet.awayScore);
   const matchWinner = getWinner(match.homeScore, match.awayScore);
