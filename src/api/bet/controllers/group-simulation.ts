@@ -42,18 +42,11 @@ function buildStandings(teams: any[], matches: any[], bets: any[]): TeamStanding
 
     const bet = bets.find((b) => b.match?.documentId === match.documentId);
 
-    let homeGoals: number | null = null;
-    let awayGoals: number | null = null;
+    /* Simulação só com palpites; nunca com placar real da partida. */
+    if (!bet || bet.homeScore == null || bet.awayScore == null) continue;
 
-    if (bet) {
-      homeGoals = bet.homeScore;
-      awayGoals = bet.awayScore;
-    } else if (match.status === 'finished' && match.homeScore != null) {
-      homeGoals = match.homeScore;
-      awayGoals = match.awayScore;
-    }
-
-    if (homeGoals == null || awayGoals == null) continue;
+    const homeGoals = bet.homeScore;
+    const awayGoals = bet.awayScore;
 
     const home = standingsMap[homeTeamId];
     const away = standingsMap[awayTeamId];
