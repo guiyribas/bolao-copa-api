@@ -6,7 +6,6 @@
   "packageManager": "yarn@1.22.22",
   "scripts": {
     "build": "strapi build",
-    "generate:render-secrets": "node scripts/generate-render-secrets.mjs",
     "generate:wc2026": "node scripts/generate-wc2026-data.mjs",
     "seed:wc2026": "tsx ./src/scripts/seed-wc2026.ts",
     "seed:wc2026:flags": "tsx ./src/scripts/seed-wc2026.ts --flags",
@@ -16,7 +15,6 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "test": "tsx --test src/api/bet/services/scoring.test.ts src/api/bet/services/bet-guards.test.ts src/api/bet/controllers/bet.test.ts",
-    "verify:render-api": "node scripts/verify-render-api.mjs",
     "start": "strapi start",
     "strapi": "strapi"
   },

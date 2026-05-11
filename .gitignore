@@ -118,10 +118,21 @@ yarn-error.log
 coverage
 
 ############################
+# Private deploy (local only)
+############################
+
+render.yaml
+scripts/render-onboard.mjs
+scripts/verify-render-api.mjs
+scripts/generate-render-secrets.mjs
+
+############################
 # Strapi
 ############################
 
 .env
+.env.*
+!.env.example
 license.txt
 exports
 .strapi
