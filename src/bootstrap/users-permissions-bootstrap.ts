@@ -7,6 +7,8 @@ const PUBLIC_ACTIONS = [
   'api::bet.custom-bet.publicBetsByUsername',
   'plugin::upload.content-api.find',
   'plugin::upload.content-api.findOne',
+  'plugin::users-permissions.auth.forgotPassword',
+  'plugin::users-permissions.auth.resetPassword',
 ] as const;
 
 const AUTHENTICATED_ACTIONS = [
@@ -80,11 +82,38 @@ async function ensureRolePermissions(
   return created;
 }
 
+async function ensureResetPasswordUrl(strapi: Core.Strapi): Promise<void> {
+  const pluginStore = strapi.store({ type: 'plugin', name: 'users-permissions' });
+  const advanced = (await pluginStore.get({ key: 'advanced' })) as
+    | { email_reset_password?: string | null }
+    | null
+    | undefined;
+  const current = advanced?.email_reset_password?.trim();
+
+  if (current) {
+    return;
+  }
+
+  const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const resetUrl = `${frontendUrl}/reset-password`;
+
+  await pluginStore.set({
+    key: 'advanced',
+    value: {
+      ...(advanced ?? {}),
+      email_reset_password: resetUrl,
+    },
+  });
+
+  strapi.log.info(`Users & Permissions: reset password page set to ${resetUrl}.`);
+}
+
 /** Idempotent allowlist for Public and Authenticated roles (README + custom routes). */
 export async function bootstrapUsersPermissions(strapi: Core.Strapi): Promise<void> {
   const usersPermissions = strapi.plugin('users-permissions').service('users-permissions');
   await usersPermissions.syncPermissions();
 
+  await ensureResetPasswordUrl(strapi);
   await ensureRolePermissions(strapi, 'public', PUBLIC_ACTIONS);
   await ensureRolePermissions(strapi, 'authenticated', AUTHENTICATED_ACTIONS);
 }
