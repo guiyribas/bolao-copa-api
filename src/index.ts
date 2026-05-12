@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 import { runProductionBootstrap } from './bootstrap/production-bootstrap';
+import { ensureGoogleFrontendRedirect } from './bootstrap/users-permissions-bootstrap';
 
 function generatePoolInviteCode(): string {
   return crypto.randomBytes(4).toString('hex').toUpperCase();
@@ -8,6 +9,13 @@ function generatePoolInviteCode(): string {
 
 export default {
   async bootstrap({ strapi }) {
+    try {
+      await ensureGoogleFrontendRedirect(strapi);
+    } catch (error) {
+      strapi.log.error('Users & Permissions Google redirect bootstrap failed.', error);
+      throw error;
+    }
+
     if (process.env.AUTO_BOOTSTRAP_PRODUCTION !== 'true') {
       return;
     }

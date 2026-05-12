@@ -108,12 +108,47 @@ async function ensureResetPasswordUrl(strapi: Core.Strapi): Promise<void> {
   strapi.log.info(`Users & Permissions: reset password page set to ${resetUrl}.`);
 }
 
+export async function ensureGoogleFrontendRedirect(strapi: Core.Strapi): Promise<void> {
+  const pluginStore = strapi.store({ type: 'plugin', name: 'users-permissions' });
+  const grant = (await pluginStore.get({ key: 'grant' })) as
+    | ({ google?: { callback?: string | null; scope?: string[] } } & Record<string, unknown>)
+    | null
+    | undefined;
+  const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const redirectUrl = `${frontendUrl}/connect/google/redirect`;
+  const current = grant?.google?.callback?.trim();
+  const currentScope = grant?.google?.scope ?? [];
+  const desiredScope = ['email', 'profile'];
+  const scopeMatches =
+    desiredScope.length === currentScope.length &&
+    desiredScope.every((scope) => currentScope.includes(scope));
+
+  if (current === redirectUrl && scopeMatches) {
+    return;
+  }
+
+  await pluginStore.set({
+    key: 'grant',
+    value: {
+      ...(grant ?? {}),
+      google: {
+        ...(grant?.google ?? {}),
+        callback: redirectUrl,
+        scope: desiredScope,
+      },
+    },
+  });
+
+  strapi.log.info(`Users & Permissions: Google front-end redirect set to ${redirectUrl}.`);
+}
+
 /** Idempotent allowlist for Public and Authenticated roles (README + custom routes). */
 export async function bootstrapUsersPermissions(strapi: Core.Strapi): Promise<void> {
   const usersPermissions = strapi.plugin('users-permissions').service('users-permissions');
   await usersPermissions.syncPermissions();
 
   await ensureResetPasswordUrl(strapi);
+  await ensureGoogleFrontendRedirect(strapi);
   await ensureRolePermissions(strapi, 'public', PUBLIC_ACTIONS);
   await ensureRolePermissions(strapi, 'authenticated', AUTHENTICATED_ACTIONS);
 }

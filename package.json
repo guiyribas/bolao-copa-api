@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
-    "test": "tsx --test src/api/bet/services/scoring.test.ts src/api/bet/services/bet-guards.test.ts src/api/bet/controllers/bet.test.ts",
+    "test": "tsx --test src/api/bet/services/scoring.test.ts src/api/bet/services/bet-guards.test.ts src/api/bet/controllers/bet.test.ts src/auth/users-permissions-auth.test.ts",
     "start": "strapi start",
     "strapi": "strapi"
   },
