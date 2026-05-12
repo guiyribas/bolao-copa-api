@@ -312,6 +312,57 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
     return ctx.send({ data: updated });
   },
 
+  async removeMember(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be logged in');
+    }
+
+    const { id, userId } = ctx.params;
+
+    const pool = await strapi.documents('api::pool.pool').findOne({
+      documentId: id,
+      populate: ['admin'],
+    });
+
+    if (!pool) {
+      return ctx.notFound('Pool not found');
+    }
+
+    const resolvedUser = await resolveUsersPermissionsUser(strapi, user);
+    if (!isPoolAdmin(pool, resolvedUser)) {
+      return ctx.forbidden('Only the pool admin can remove members');
+    }
+
+    const admin = pool.admin as AdminLike;
+    if (
+      (admin?.documentId && admin.documentId === userId) ||
+      (admin?.id != null &&
+        userId != null &&
+        !Number.isNaN(Number(userId)) &&
+        Number(admin.id) === Number(userId))
+    ) {
+      return ctx.badRequest('The pool admin cannot be removed from the pool');
+    }
+
+    const memberships = await strapi.documents('api::pool-membership.pool-membership').findMany({
+      filters: {
+        pool: { documentId: id },
+        user: { documentId: userId },
+      },
+    });
+
+    if (!memberships.length) {
+      return ctx.notFound('Membership not found');
+    }
+
+    await strapi.documents('api::pool-membership.pool-membership').delete({
+      documentId: memberships[0].documentId,
+    });
+
+    return ctx.send({ data: { removed: true } });
+  },
+
   async updatePoolSettings(ctx) {
     const user = ctx.state.user;
     if (!user) {

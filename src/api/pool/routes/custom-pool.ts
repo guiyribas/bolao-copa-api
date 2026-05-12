@@ -73,6 +73,15 @@ export default {
       },
     },
     {
+      method: 'DELETE',
+      path: '/pools/:id/members/:userId',
+      handler: 'custom-pool.removeMember',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
       method: 'PATCH',
       path: '/pools/:id/settings',
       handler: 'custom-pool.updatePoolSettings',
