@@ -6,6 +6,11 @@
   "packageManager": "yarn@1.22.22",
   "scripts": {
     "build": "strapi build",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "db:reset": "docker compose down -v",
+    "dev:docker": "yarn db:up && yarn dev",
     "generate:wc2026": "node scripts/generate-wc2026-data.mjs",
     "seed:wc2026": "tsx ./src/scripts/seed-wc2026.ts",
     "seed:wc2026:flags": "tsx ./src/scripts/seed-wc2026.ts --flags",
