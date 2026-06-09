@@ -104,6 +104,70 @@ Executa os testes unitários da pontuação (`src/api/bet/services/scoring.test.
 
 ---
 
+## Sincronização de placares
+
+A integração permite escolher um provedor de placares por ambiente. Apenas um provedor fica ativo por vez,
+evitando que duas fontes sobrescrevam o mesmo jogo.
+
+Configure o seletor no `.env`:
+
+```env
+SCORE_PROVIDER=football-data
+SCORE_SYNC_ENABLED=false
+```
+
+Valores aceitos para `SCORE_PROVIDER`:
+
+- `football-data`: API estabelecida, exige token e pode atrasar placares no plano gratuito.
+- `worldcup26`: API comunitária gratuita, sem token e com promessa de placares em tempo real.
+
+Configuração do `football-data`:
+
+```env
+FOOTBALL_DATA_API_KEY=sua-chave
+FOOTBALL_DATA_API_URL=https://api.football-data.org/v4
+FOOTBALL_DATA_COMPETITION=WC
+FOOTBALL_DATA_SEASON=2026
+FOOTBALL_DATA_TIMEOUT_MS=15000
+FOOTBALL_DATA_CRON=
+```
+
+Configuração do `worldcup26`:
+
+```env
+WORLDCUP26_API_URL=https://worldcup26.ir
+WORLDCUP26_TIMEOUT_MS=15000
+WORLDCUP26_CRON=
+```
+
+Teste manualmente antes de habilitar o cron:
+
+```bash
+yarn sync:scores
+```
+
+O comando compila o projeto antes da sincronização para evitar incompatibilidades entre o runner `tsx`
+e dependências CommonJS usadas internamente pelo Strapi.
+
+O `football-data` vincula partidas pelo horário e pelos códigos das seleções, salvando seu identificador
+em `externalId`. O `worldcup26` usa diretamente o `matchNumber` de `1` a `104` e não altera o vínculo do
+outro provedor.
+
+Com `SCORE_SYNC_ENABLED=true`, o cron consulta `football-data` a cada 15 minutos ou `worldcup26` a cada
+3 minutos, conforme o provedor selecionado. Atualizações com status `finished` disparam o lifecycle existente
+e recalculam os pontos dos palpites.
+
+As variáveis `FOOTBALL_DATA_CRON` e `WORLDCUP26_CRON` aceitam expressões cron com segundos. Quando vazias,
+usam os intervalos padrão acima. Exemplo para consultar `worldcup26` a cada minuto:
+
+```env
+WORLDCUP26_CRON=0 * * * * *
+```
+
+Ao usar `football-data`, o provedor exige a atribuição visível `Data provided by football-data.org` no app/site.
+
+---
+
 ## Partidas e placar (admin)
 
 - **Palpites**: a API recusa criar ou atualizar palpite se `matchStatus` for `live` ou `finished`, ou se a hora atual for **igual ou posterior** ao campo `date` da partida (início do jogo). Alinha com a página **Regras e pontuação** no app.
