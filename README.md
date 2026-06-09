@@ -2,6 +2,23 @@
 
 Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
 
+### Desenvolvimento local com PostgreSQL no Docker
+
+Com Docker e Docker Compose disponíveis:
+
+```bash
+yarn dev:docker
+```
+
+Esse comando sobe o PostgreSQL, aguarda o healthcheck e inicia o Strapi. Comandos úteis:
+
+```bash
+yarn db:up     # sobe somente o PostgreSQL
+yarn db:logs   # acompanha os logs do PostgreSQL
+yarn db:down   # para e remove o container, preservando os dados
+yarn db:reset  # remove também o volume e todos os dados locais
+```
+
 ### `develop`
 
 Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
