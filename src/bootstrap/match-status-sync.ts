@@ -10,21 +10,19 @@ export const MATCH_LIVE_WINDOW_MS = 2 * 60 * 60 * 1000;
  * continua sem gols; quem passou por `live` com 0–0 mantém esse placar até alguém atualizar).
  */
 export async function syncMatchStatuses(strapi: Core.Strapi): Promise<void> {
+  if (process.env.SCORE_SYNC_ENABLED === 'true') {
+    return;
+  }
+
   const now = Date.now();
   const nowDate = new Date(now);
   const cutoff = new Date(now - MATCH_LIVE_WINDOW_MS);
 
   const uid = 'api::match.match';
-  const providerFilters =
-    process.env.SCORE_SYNC_ENABLED === 'true' ||
-    process.env.FOOTBALL_DATA_SYNC_ENABLED === 'true'
-      ? [{ externalId: { $null: true } }]
-      : [];
 
   const scheduledToLive = (await strapi.documents(uid).findMany({
     filters: {
       $and: [
-        ...providerFilters,
         { matchStatus: 'scheduled' },
         { date: { $lte: nowDate.toISOString() } },
         { date: { $gt: cutoff.toISOString() } },
@@ -49,7 +47,6 @@ export async function syncMatchStatuses(strapi: Core.Strapi): Promise<void> {
   const scheduledToFinished = (await strapi.documents(uid).findMany({
     filters: {
       $and: [
-        ...providerFilters,
         { matchStatus: 'scheduled' },
         { date: { $lte: cutoff.toISOString() } },
       ],
@@ -73,7 +70,6 @@ export async function syncMatchStatuses(strapi: Core.Strapi): Promise<void> {
   const liveToFinished = (await strapi.documents(uid).findMany({
     filters: {
       $and: [
-        ...providerFilters,
         { matchStatus: 'live' },
         { date: { $lte: cutoff.toISOString() } },
       ],

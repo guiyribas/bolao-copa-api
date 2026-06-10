@@ -14,10 +14,7 @@ export function getScoreProvider(): ScoreProvider {
 }
 
 export function isScoreSyncEnabled(): boolean {
-  return (
-    process.env.SCORE_SYNC_ENABLED === 'true' ||
-    process.env.FOOTBALL_DATA_SYNC_ENABLED === 'true'
-  );
+  return process.env.SCORE_SYNC_ENABLED === 'true';
 }
 
 export async function syncScores(strapi: Core.Strapi) {
