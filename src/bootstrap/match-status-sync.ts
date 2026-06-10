@@ -15,10 +15,16 @@ export async function syncMatchStatuses(strapi: Core.Strapi): Promise<void> {
   const cutoff = new Date(now - MATCH_LIVE_WINDOW_MS);
 
   const uid = 'api::match.match';
+  const providerFilters =
+    process.env.SCORE_SYNC_ENABLED === 'true' ||
+    process.env.FOOTBALL_DATA_SYNC_ENABLED === 'true'
+      ? [{ externalId: { $null: true } }]
+      : [];
 
   const scheduledToLive = (await strapi.documents(uid).findMany({
     filters: {
       $and: [
+        ...providerFilters,
         { matchStatus: 'scheduled' },
         { date: { $lte: nowDate.toISOString() } },
         { date: { $gt: cutoff.toISOString() } },
@@ -42,7 +48,11 @@ export async function syncMatchStatuses(strapi: Core.Strapi): Promise<void> {
 
   const scheduledToFinished = (await strapi.documents(uid).findMany({
     filters: {
-      $and: [{ matchStatus: 'scheduled' }, { date: { $lte: cutoff.toISOString() } }],
+      $and: [
+        ...providerFilters,
+        { matchStatus: 'scheduled' },
+        { date: { $lte: cutoff.toISOString() } },
+      ],
     } as any,
     limit: 1000,
   })) as Array<{ documentId: string }>;
@@ -62,7 +72,11 @@ export async function syncMatchStatuses(strapi: Core.Strapi): Promise<void> {
 
   const liveToFinished = (await strapi.documents(uid).findMany({
     filters: {
-      $and: [{ matchStatus: 'live' }, { date: { $lte: cutoff.toISOString() } }],
+      $and: [
+        ...providerFilters,
+        { matchStatus: 'live' },
+        { date: { $lte: cutoff.toISOString() } },
+      ],
     } as any,
     limit: 1000,
   })) as Array<{ documentId: string }>;

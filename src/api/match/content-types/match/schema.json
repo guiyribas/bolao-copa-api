@@ -60,6 +60,10 @@
       "unique": true,
       "required": true
     },
+    "externalId": {
+      "type": "string",
+      "unique": true
+    },
     "bets": {
       "type": "relation",
       "relation": "oneToMany",
