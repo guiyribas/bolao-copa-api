@@ -1,4 +1,4 @@
-import { calculatePoints } from '../../../../api/bet/services/scoring';
+import { recalculateMatchBetPoints } from '../../../../api/bet/services/recalculate-match-points';
 
 function pickTeamDocumentId(value: unknown): string | undefined {
   if (value == null || value === '') {
@@ -113,45 +113,29 @@ export default {
       return;
     }
 
-    // Recalcula pontos dos bets sem deixar erro em um bet abortar o save da partida.
-    try {
-      const bets = (await strapi.documents('api::bet.bet').findMany({
-        filters: { match: { documentId: result.documentId } } as any,
-      })) as Array<{ documentId: string; homeScore: number | null; awayScore: number | null; points: number | null }>;
+    const matchPayload = {
+      documentId: result.documentId as string,
+      homeScore: result.homeScore as number,
+      awayScore: result.awayScore as number,
+      phase: result.phase as string | undefined,
+    };
 
-      for (const bet of bets) {
-        if (bet.homeScore == null || bet.awayScore == null) {
-          continue;
-        }
-
-        const points = calculatePoints(
-          { homeScore: bet.homeScore, awayScore: bet.awayScore },
-          { homeScore: result.homeScore, awayScore: result.awayScore, phase: result.phase }
-        );
-
-        if (bet.points === points) {
-          continue;
-        }
-
-        try {
-          await strapi.documents('api::bet.bet').update({
-            documentId: bet.documentId,
-            data: { points } as any,
-          });
-        } catch (betErr) {
+    setImmediate(() => {
+      recalculateMatchBetPoints(strapi, matchPayload)
+        .then(({ updated, skipped }) => {
+          if (updated > 0) {
+            strapi.log.info(
+              `[match.afterUpdate] Pontos recalculados para ${matchPayload.documentId}: ${updated} atualizados, ${skipped} ignorados`
+            );
+          }
+        })
+        .catch((err) => {
           strapi.log.error(
-            `[match.afterUpdate] Falha ao atualizar pontos do bet ${bet.documentId}: ${
-              betErr instanceof Error ? betErr.message : String(betErr)
+            `[match.afterUpdate] Falha ao recalcular pontos da partida ${matchPayload.documentId}: ${
+              err instanceof Error ? err.message : String(err)
             }`
           );
-        }
-      }
-    } catch (err) {
-      strapi.log.error(
-        `[match.afterUpdate] Falha ao recalcular pontos da partida ${result.documentId}: ${
-          err instanceof Error ? err.message : String(err)
-        }`
-      );
-    }
+        });
+    });
   },
 };

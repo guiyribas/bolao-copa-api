@@ -75,7 +75,7 @@ async function computePoolRanking(
   if (memberIds.length > 0) {
     const bets = await strapi.documents('api::bet.bet').findMany({
       filters: {
-        $or: memberIds.map((memberId) => ({ user: { id: memberId } })),
+        user: { id: { $in: memberIds } },
       } as any,
       populate: ['user', 'match'],
     });
@@ -617,7 +617,7 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
       const bets = await strapi.documents('api::bet.bet').findMany({
         filters: {
           match: { documentId: matchDocumentId },
-          $or: memberIdArray.map((memberId) => ({ user: { id: memberId } })),
+          user: { id: { $in: memberIdArray } },
         } as any,
         populate: ['user'],
       });
