@@ -1,5 +1,7 @@
 import type { Core } from '@strapi/strapi';
 
+import { resolveSyncedMatchStatus } from './match-status-sync-rules';
+
 const DEFAULT_BASE_URL = 'https://worldcup26.ir';
 const DEFAULT_TIMEOUT_MS = 15_000;
 
@@ -128,8 +130,11 @@ export async function syncWorldCup26Matches(strapi: Core.Strapi): Promise<{
     }
 
     const data: Record<string, unknown> = {};
-    if (local.matchStatus !== remote.matchStatus)
-      data.matchStatus = remote.matchStatus;
+    const nextStatus = resolveSyncedMatchStatus(
+      local.matchStatus,
+      remote.matchStatus
+    );
+    if (local.matchStatus !== nextStatus) data.matchStatus = nextStatus;
     if (remote.homeScore != null && local.homeScore !== remote.homeScore)
       data.homeScore = remote.homeScore;
     if (remote.awayScore != null && local.awayScore !== remote.awayScore)

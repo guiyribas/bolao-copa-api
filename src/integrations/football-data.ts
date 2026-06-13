@@ -1,5 +1,7 @@
 import type { Core } from '@strapi/strapi';
 
+import { resolveSyncedMatchStatus } from './match-status-sync-rules';
+
 const DEFAULT_BASE_URL = 'https://api.football-data.org/v4';
 const DEFAULT_COMPETITION = 'WC';
 const DEFAULT_SEASON = 2026;
@@ -226,8 +228,12 @@ function buildUpdateData(
   if (local.externalId !== remote.externalId) {
     data.externalId = remote.externalId;
   }
-  if (local.matchStatus !== remote.matchStatus) {
-    data.matchStatus = remote.matchStatus;
+  const nextStatus = resolveSyncedMatchStatus(
+    local.matchStatus,
+    remote.matchStatus
+  );
+  if (local.matchStatus !== nextStatus) {
+    data.matchStatus = nextStatus;
   }
   if (remote.homeScore != null && local.homeScore !== remote.homeScore) {
     data.homeScore = remote.homeScore;
