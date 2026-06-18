@@ -17,7 +17,7 @@ function parsePositiveInt(raw: unknown, fallback: number, max: number): number {
 const globalRanking = ({ strapi }: { strapi: Core.Strapi }) => ({
   async list(ctx) {
     const page = parsePositiveInt(ctx.query.page, 1, Number.MAX_SAFE_INTEGER);
-    const pageSize = parsePositiveInt(ctx.query.pageSize, 50, 100);
+    const pageSize = parsePositiveInt(ctx.query.pageSize, 20, 100);
 
     const rows = (await strapi.documents('api::user-ranking.user-ranking').findMany({
       populate: ['user'],
