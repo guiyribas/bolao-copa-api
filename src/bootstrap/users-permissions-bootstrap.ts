@@ -5,6 +5,7 @@ const PUBLIC_ACTIONS = [
   'api::match.match.find',
   'api::team.team.find',
   'api::bet.custom-bet.publicBetsByUsername',
+  'api::user-ranking.global-ranking.list',
   'plugin::upload.content-api.find',
   'plugin::upload.content-api.findOne',
   'plugin::users-permissions.auth.forgotPassword',
@@ -151,4 +152,11 @@ export async function bootstrapUsersPermissions(strapi: Core.Strapi): Promise<vo
   await ensureGoogleFrontendRedirect(strapi);
   await ensureRolePermissions(strapi, 'public', PUBLIC_ACTIONS);
   await ensureRolePermissions(strapi, 'authenticated', AUTHENTICATED_ACTIONS);
+}
+
+/** Garante permissão pública do ranking global em deploys já existentes. */
+export async function ensurePublicGlobalRankingPermission(strapi: Core.Strapi): Promise<void> {
+  const usersPermissions = strapi.plugin('users-permissions').service('users-permissions');
+  await usersPermissions.syncPermissions();
+  await ensureRolePermissions(strapi, 'public', ['api::user-ranking.global-ranking.list']);
 }

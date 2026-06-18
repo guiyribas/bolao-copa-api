@@ -712,6 +712,41 @@ export interface ApiTeamTeam extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiUserRankingUserRanking extends Struct.CollectionTypeSchema {
+  collectionName: 'user_rankings';
+  info: {
+    displayName: 'User Ranking';
+    pluralName: 'user-rankings';
+    singularName: 'user-ranking';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    exactHitCount: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    groupPhasePoints: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    knockoutPoints: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-ranking.user-ranking'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    totalPoints: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user: Schema.Attribute.Relation<
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+  };
+}
+
 export interface PluginContentReleasesRelease
   extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_releases';
@@ -1229,6 +1264,7 @@ declare module '@strapi/strapi' {
       'api::pool-membership.pool-membership': ApiPoolMembershipPoolMembership;
       'api::pool.pool': ApiPoolPool;
       'api::team.team': ApiTeamTeam;
+      'api::user-ranking.user-ranking': ApiUserRankingUserRanking;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

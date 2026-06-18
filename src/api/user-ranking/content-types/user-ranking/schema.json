@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_rankings",
+  "info": {
+    "singularName": "user-ranking",
+    "pluralName": "user-rankings",
+    "displayName": "User Ranking"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "totalPoints": {
+      "type": "integer",
+      "default": 0
+    },
+    "groupPhasePoints": {
+      "type": "integer",
+      "default": 0
+    },
+    "knockoutPoints": {
+      "type": "integer",
+      "default": 0
+    },
+    "exactHitCount": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

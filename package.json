@@ -20,7 +20,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
-    "test": "tsx --test src/api/bet/services/scoring.test.ts src/api/bet/services/bet-guards.test.ts src/api/bet/services/recalculate-match-points.test.ts src/api/bet/controllers/bet.test.ts src/auth/users-permissions-auth.test.ts src/integrations/football-data.test.ts src/integrations/worldcup26.test.ts",
+    "test": "tsx --test src/api/bet/services/scoring.test.ts src/api/bet/services/bet-guards.test.ts src/api/bet/services/recalculate-match-points.test.ts src/api/user-ranking/services/compute-user-ranking.test.ts src/api/bet/controllers/bet.test.ts src/auth/users-permissions-auth.test.ts src/integrations/football-data.test.ts src/integrations/worldcup26.test.ts",
     "start": "strapi start",
     "strapi": "strapi"
   },

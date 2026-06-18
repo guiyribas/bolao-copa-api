@@ -1,7 +1,11 @@
 import crypto from 'crypto';
 
 import { runProductionBootstrap } from './bootstrap/production-bootstrap';
-import { ensureGoogleFrontendRedirect } from './bootstrap/users-permissions-bootstrap';
+import { seedUserRankingsIfEmpty } from './bootstrap/seed-user-rankings';
+import {
+  ensureGoogleFrontendRedirect,
+  ensurePublicGlobalRankingPermission,
+} from './bootstrap/users-permissions-bootstrap';
 
 function generatePoolInviteCode(): string {
   return crypto.randomBytes(4).toString('hex').toUpperCase();
@@ -14,6 +18,18 @@ export default {
     } catch (error) {
       strapi.log.error('Users & Permissions Google redirect bootstrap failed.', error);
       throw error;
+    }
+
+    try {
+      await ensurePublicGlobalRankingPermission(strapi);
+    } catch (error) {
+      strapi.log.error('Global ranking public permission bootstrap failed.', error);
+    }
+
+    try {
+      await seedUserRankingsIfEmpty(strapi);
+    } catch (error) {
+      strapi.log.error('User rankings seed failed.', error);
     }
 
     if (process.env.AUTO_BOOTSTRAP_PRODUCTION !== 'true') {

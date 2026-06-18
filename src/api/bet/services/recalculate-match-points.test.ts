@@ -5,10 +5,21 @@ import type { Core } from '@strapi/strapi';
 
 import { recalculateMatchBetPoints } from './recalculate-match-points';
 
-function makeStrapiMock(bets: Array<Record<string, unknown>>, updates: Array<{ documentId: string; points: number }>) {
+function makeStrapiMock(
+  bets: Array<Record<string, unknown>>,
+  updates: Array<{ documentId: string; points: number }>
+) {
   const strapi = {
-    documents: () => ({
-      findMany: async () => bets,
+    documents: (uid?: string) => ({
+      findMany: async () => {
+        if (uid === 'api::user-ranking.user-ranking') return [];
+        if (uid === 'plugin::users-permissions.user') {
+          return [{ documentId: 'user-1' }];
+        }
+        return bets;
+      },
+      create: async () => ({}),
+      update: async () => ({}),
     }),
     db: {
       transaction: async (fn: () => Promise<void>) => fn(),
@@ -39,12 +50,14 @@ describe('recalculateMatchBetPoints', () => {
           homeScore: 2,
           awayScore: 1,
           points: null,
+          user: { id: 1 },
         },
         {
           documentId: 'bet-2',
           homeScore: 2,
           awayScore: 1,
           points: 10,
+          user: { id: 2 },
         },
       ],
       updates
