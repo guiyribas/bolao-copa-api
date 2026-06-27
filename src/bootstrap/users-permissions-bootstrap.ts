@@ -6,6 +6,7 @@ const PUBLIC_ACTIONS = [
   'api::team.team.find',
   'api::bet.custom-bet.publicBetsByUsername',
   'api::user-ranking.global-ranking.list',
+  'api::tournament-config.custom-tournament-config.currentPhase',
   'plugin::upload.content-api.find',
   'plugin::upload.content-api.findOne',
   'plugin::users-permissions.auth.forgotPassword',
@@ -159,4 +160,13 @@ export async function ensurePublicGlobalRankingPermission(strapi: Core.Strapi): 
   const usersPermissions = strapi.plugin('users-permissions').service('users-permissions');
   await usersPermissions.syncPermissions();
   await ensureRolePermissions(strapi, 'public', ['api::user-ranking.global-ranking.list']);
+}
+
+/** Garante permissão pública da fase atual do torneio em deploys já existentes. */
+export async function ensurePublicTournamentPhasePermission(strapi: Core.Strapi): Promise<void> {
+  const usersPermissions = strapi.plugin('users-permissions').service('users-permissions');
+  await usersPermissions.syncPermissions();
+  await ensureRolePermissions(strapi, 'public', [
+    'api::tournament-config.custom-tournament-config.currentPhase',
+  ]);
 }

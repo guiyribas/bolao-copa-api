@@ -1,0 +1,22 @@
+{
+  "kind": "singleType",
+  "collectionName": "tournament_configs",
+  "info": {
+    "singularName": "tournament-config",
+    "pluralName": "tournament-configs",
+    "displayName": "Configuração do torneio",
+    "description": "Configuração global do torneio (fase atual, etc.)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "currentPhase": {
+      "type": "enumeration",
+      "enum": ["group", "round_of_32", "round_of_16", "quarter", "semi", "third_place", "final"],
+      "default": "group",
+      "required": true
+    }
+  }
+}

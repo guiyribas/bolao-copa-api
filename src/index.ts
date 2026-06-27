@@ -1,10 +1,12 @@
 import crypto from 'crypto';
 
 import { runProductionBootstrap } from './bootstrap/production-bootstrap';
+import { seedTournamentConfigIfEmpty } from './bootstrap/seed-tournament-config';
 import { seedUserRankingsIfEmpty } from './bootstrap/seed-user-rankings';
 import {
   ensureGoogleFrontendRedirect,
   ensurePublicGlobalRankingPermission,
+  ensurePublicTournamentPhasePermission,
 } from './bootstrap/users-permissions-bootstrap';
 
 function generatePoolInviteCode(): string {
@@ -24,6 +26,18 @@ export default {
       await ensurePublicGlobalRankingPermission(strapi);
     } catch (error) {
       strapi.log.error('Global ranking public permission bootstrap failed.', error);
+    }
+
+    try {
+      await ensurePublicTournamentPhasePermission(strapi);
+    } catch (error) {
+      strapi.log.error('Tournament phase public permission bootstrap failed.', error);
+    }
+
+    try {
+      await seedTournamentConfigIfEmpty(strapi);
+    } catch (error) {
+      strapi.log.error('Tournament config seed failed.', error);
     }
 
     try {

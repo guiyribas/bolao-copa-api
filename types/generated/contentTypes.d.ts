@@ -712,6 +712,48 @@ export interface ApiTeamTeam extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiTournamentConfigTournamentConfig
+  extends Struct.SingleTypeSchema {
+  collectionName: 'tournament_configs';
+  info: {
+    description: 'Configura\u00E7\u00E3o global do torneio (fase atual, etc.)';
+    displayName: 'Configura\u00E7\u00E3o do torneio';
+    pluralName: 'tournament-configs';
+    singularName: 'tournament-config';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    currentPhase: Schema.Attribute.Enumeration<
+      [
+        'group',
+        'round_of_32',
+        'round_of_16',
+        'quarter',
+        'semi',
+        'third_place',
+        'final',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'group'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::tournament-config.tournament-config'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiUserRankingUserRanking extends Struct.CollectionTypeSchema {
   collectionName: 'user_rankings';
   info: {
@@ -1264,6 +1306,7 @@ declare module '@strapi/strapi' {
       'api::pool-membership.pool-membership': ApiPoolMembershipPoolMembership;
       'api::pool.pool': ApiPoolPool;
       'api::team.team': ApiTeamTeam;
+      'api::tournament-config.tournament-config': ApiTournamentConfigTournamentConfig;
       'api::user-ranking.user-ranking': ApiUserRankingUserRanking;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

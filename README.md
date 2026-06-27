@@ -96,6 +96,28 @@ Os palpites são **globais** (um por partida por usuário). Se `GET /api/matches
 
 No dev, o React pode disparar cada request **duas vezes** (Strict Mode); não é falha extra da API.
 
+### Fase atual do torneio (`currentPhase`)
+
+O single type **Configuração do torneio** (`tournament-config`) guarda a fase em que a Copa está. O bootstrap cria o registro com `currentPhase: group` se ainda não existir.
+
+**Alterar manualmente:** Strapi Admin → Content Manager → **Configuração do torneio** → campo **Fase atual** → Save.
+
+Valores possíveis (mesmo enum de `match.phase`):
+
+| Valor | Significado |
+|-------|-------------|
+| `group` | Fase de grupos |
+| `round_of_32` | Segunda fase |
+| `round_of_16` | Oitavas |
+| `quarter` | Quartas |
+| `semi` | Semi |
+| `third_place` | 3º lugar |
+| `final` | Final |
+
+**Endpoint público:** `GET /api/tournament/current-phase` → `{ "currentPhase": "group" }`.
+
+**Efeito no frontend:** enquanto `currentPhase` for `group`, `/palpites` mantém o comportamento atual (aba **Todas** por padrão). A partir da segunda fase (`round_of_32` em diante), ao abrir `/palpites` sem `?phase=` na URL, o app redireciona para a aba correspondente. Se o usuário escolher outra aba manualmente (`?phase=...`), a URL é respeitada.
+
 ---
 
 ### Testes (`yarn test`)
