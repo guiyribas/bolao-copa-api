@@ -46,6 +46,39 @@ function matchTitleFromFixture(m: FixtureMatch, codeToName: Record<string, strin
   return `Partida ${m.matchNumber}`;
 }
 
+type TeamRelation = { documentId?: string | null } | null | undefined;
+
+function teamSlotFilled(team: TeamRelation): boolean {
+  return typeof team?.documentId === 'string' && team.documentId.trim() !== '';
+}
+
+/** Preserva atribuições manuais de times/título (ex.: mata-mata preenchido no admin). */
+function preserveManualMatchTeams(
+  updatePayload: Record<string, unknown>,
+  current: { homeTeam?: TeamRelation; awayTeam?: TeamRelation; title?: string | null }
+): void {
+  const hasManualTeams = teamSlotFilled(current.homeTeam) || teamSlotFilled(current.awayTeam);
+  if (!hasManualTeams) {
+    return;
+  }
+
+  if (teamSlotFilled(current.homeTeam)) {
+    updatePayload.homeTeam = current.homeTeam?.documentId;
+  }
+  if (teamSlotFilled(current.awayTeam)) {
+    updatePayload.awayTeam = current.awayTeam?.documentId;
+  }
+  if (typeof current.title === 'string' && current.title.trim() !== '') {
+    updatePayload.title = current.title;
+  }
+}
+
+/** Returns true when the database already has WC2026 fixture rows. */
+export async function hasWc2026Fixtures(strapi: Core.Strapi): Promise<boolean> {
+  const existing = await strapi.documents('api::match.match').findMany({ limit: 1 });
+  return existing.length > 0;
+}
+
 /** Upserts 48 seleções + 104 partidas a partir de `data/world-cup-2026-fixtures.json` (idempotente). */
 export async function seedWorldCup2026(strapi: Core.Strapi): Promise<void> {
   let data: FixturesFile;
@@ -120,13 +153,21 @@ export async function seedWorldCup2026(strapi: Core.Strapi): Promise<void> {
     const existingMatch = (await strapi.documents('api::match.match').findMany({
       filters: { matchNumber: m.matchNumber },
       limit: 1,
-    })) as Array<{ documentId: string; matchStatus?: string | null }>;
+      populate: ['homeTeam', 'awayTeam'],
+    })) as Array<{
+      documentId: string;
+      matchStatus?: string | null;
+      homeTeam?: TeamRelation;
+      awayTeam?: TeamRelation;
+      title?: string | null;
+    }>;
 
     if (existingMatch.length > 0) {
       // Backfill: se a partida está sem status (legado), seta como 'scheduled'.
       // Caso contrário preserva o status atual (admin tem precedência).
       const current = existingMatch[0];
       const finalPayload: Record<string, unknown> = { ...updatePayload };
+      preserveManualMatchTeams(finalPayload, current);
       if (current.matchStatus == null || current.matchStatus === '') {
         finalPayload.matchStatus = 'scheduled';
       }

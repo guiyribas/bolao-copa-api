@@ -1,12 +1,18 @@
 import type { Core } from '@strapi/strapi';
 
 import { bootstrapUsersPermissions } from './users-permissions-bootstrap';
-import { seedWorldCup2026, seedWorldCup2026Flags } from './wc2026-seed';
+import { hasWc2026Fixtures, seedWorldCup2026, seedWorldCup2026Flags } from './wc2026-seed';
 
 /** WC2026 fixtures, flags, and Users & Permissions allowlist for a fresh production database. */
 export async function runProductionBootstrap(strapi: Core.Strapi): Promise<void> {
-  strapi.log.info('Production bootstrap: WC2026 fixtures…');
-  await seedWorldCup2026(strapi);
+  if (await hasWc2026Fixtures(strapi)) {
+    strapi.log.info(
+      'Production bootstrap: WC2026 fixtures skipped (matches already exist; use yarn seed:wc2026 to force sync).'
+    );
+  } else {
+    strapi.log.info('Production bootstrap: WC2026 fixtures…');
+    await seedWorldCup2026(strapi);
+  }
 
   strapi.log.info('Production bootstrap: team flags…');
   try {
