@@ -39,6 +39,21 @@ function resolveUpdateDocumentId(params: Record<string, unknown>): string | unde
   return undefined;
 }
 
+function resolveDeleteDocumentId(params: Record<string, unknown>): string | undefined {
+  return resolveUpdateDocumentId(params);
+}
+
+async function assertMatchHasNoBets(documentId: string): Promise<void> {
+  const bets = await strapi.documents('api::bet.bet').findMany({
+    filters: { match: { documentId } } as never,
+    limit: 1,
+  });
+
+  if (bets.length > 0) {
+    throw new Error('Partida possui palpites; exclusão bloqueada');
+  }
+}
+
 async function syncMatchTitleFromRelations(
   data: Record<string, unknown>,
   existing: Record<string, unknown> | null
@@ -104,6 +119,15 @@ export default {
         }`
       );
     }
+  },
+
+  async beforeDelete(event: { params: Record<string, unknown> }) {
+    const documentId = resolveDeleteDocumentId(event.params);
+    if (!documentId) {
+      return;
+    }
+
+    await assertMatchHasNoBets(documentId);
   },
 
   async afterUpdate(event: any) {
