@@ -177,7 +177,8 @@ outro provedor.
 
 Com `SCORE_SYNC_ENABLED=true`, o cron consulta `football-data` a cada 15 minutos ou `worldcup26` a cada
 3 minutos, conforme o provedor selecionado. Atualizações com status `finished` disparam o lifecycle existente
-e recalculam os pontos dos palpites.
+e recalculam os pontos dos palpites. Partidas já marcadas como `finished` **não têm o placar sobrescrito**
+pelo cron — correções manuais no admin são preservadas.
 
 As variáveis `FOOTBALL_DATA_CRON` e `WORLDCUP26_CRON` aceitam expressões cron com segundos. Quando vazias,
 usam os intervalos padrão acima. Exemplo para consultar `worldcup26` a cada minuto:

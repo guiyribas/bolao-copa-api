@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { mapFootballDataStatus, toMatchUpdate } from './football-data';
+import { buildUpdateData, mapFootballDataStatus, toMatchUpdate } from './football-data';
 
 describe('mapFootballDataStatus', () => {
   it('mapeia estados em andamento para live', () => {
@@ -82,5 +82,51 @@ describe('toMatchUpdate', () => {
 
     assert.equal(match?.homeScore, 1);
     assert.equal(match?.awayScore, 1);
+  });
+});
+
+describe('buildUpdateData', () => {
+  const remote = {
+    externalId: '123',
+    date: '2026-06-27T00:00:00Z',
+    homeCode: 'PAR',
+    awayCode: 'GER',
+    homeScore: 1,
+    awayScore: 0,
+    matchStatus: 'finished' as const,
+  };
+
+  it('não sobrescreve placar quando local já está finished', () => {
+    const data = buildUpdateData(
+      {
+        documentId: 'doc-1',
+        externalId: '123',
+        homeScore: 1,
+        awayScore: 1,
+        matchStatus: 'finished',
+      },
+      remote
+    );
+
+    assert.deepEqual(data, {});
+  });
+
+  it('aplica placar ao transicionar de live para finished', () => {
+    const data = buildUpdateData(
+      {
+        documentId: 'doc-1',
+        externalId: '123',
+        homeScore: 0,
+        awayScore: null,
+        matchStatus: 'live',
+      },
+      remote
+    );
+
+    assert.deepEqual(data, {
+      matchStatus: 'finished',
+      homeScore: 1,
+      awayScore: 0,
+    });
   });
 });

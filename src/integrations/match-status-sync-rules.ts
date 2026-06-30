@@ -10,3 +10,9 @@ export function resolveSyncedMatchStatus(
   if (current === 'finished') return 'finished';
   return remote;
 }
+
+export function shouldApplyRemoteScores(
+  local: MatchStatus | null | undefined
+): boolean {
+  return (local ?? 'scheduled') !== 'finished';
+}

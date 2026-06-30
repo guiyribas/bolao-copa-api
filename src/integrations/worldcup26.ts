@@ -1,6 +1,9 @@
 import type { Core } from '@strapi/strapi';
 
-import { resolveSyncedMatchStatus } from './match-status-sync-rules';
+import {
+  resolveSyncedMatchStatus,
+  shouldApplyRemoteScores,
+} from './match-status-sync-rules';
 
 const DEFAULT_BASE_URL = 'https://worldcup26.ir';
 const DEFAULT_TIMEOUT_MS = 15_000;
@@ -135,10 +138,12 @@ export async function syncWorldCup26Matches(strapi: Core.Strapi): Promise<{
       remote.matchStatus
     );
     if (local.matchStatus !== nextStatus) data.matchStatus = nextStatus;
-    if (remote.homeScore != null && local.homeScore !== remote.homeScore)
-      data.homeScore = remote.homeScore;
-    if (remote.awayScore != null && local.awayScore !== remote.awayScore)
-      data.awayScore = remote.awayScore;
+    if (shouldApplyRemoteScores(local.matchStatus)) {
+      if (remote.homeScore != null && local.homeScore !== remote.homeScore)
+        data.homeScore = remote.homeScore;
+      if (remote.awayScore != null && local.awayScore !== remote.awayScore)
+        data.awayScore = remote.awayScore;
+    }
     if (Object.keys(data).length === 0) continue;
 
     await strapi.documents('api::match.match').update({

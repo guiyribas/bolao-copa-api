@@ -1,6 +1,9 @@
 import type { Core } from '@strapi/strapi';
 
-import { resolveSyncedMatchStatus } from './match-status-sync-rules';
+import {
+  resolveSyncedMatchStatus,
+  shouldApplyRemoteScores,
+} from './match-status-sync-rules';
 
 const DEFAULT_BASE_URL = 'https://api.football-data.org/v4';
 const DEFAULT_COMPETITION = 'WC';
@@ -219,7 +222,7 @@ function findLocalMatch(
   );
 }
 
-function buildUpdateData(
+export function buildUpdateData(
   local: LocalMatch,
   remote: MatchUpdate
 ): Record<string, unknown> {
@@ -235,11 +238,13 @@ function buildUpdateData(
   if (local.matchStatus !== nextStatus) {
     data.matchStatus = nextStatus;
   }
-  if (remote.homeScore != null && local.homeScore !== remote.homeScore) {
-    data.homeScore = remote.homeScore;
-  }
-  if (remote.awayScore != null && local.awayScore !== remote.awayScore) {
-    data.awayScore = remote.awayScore;
+  if (shouldApplyRemoteScores(local.matchStatus)) {
+    if (remote.homeScore != null && local.homeScore !== remote.homeScore) {
+      data.homeScore = remote.homeScore;
+    }
+    if (remote.awayScore != null && local.awayScore !== remote.awayScore) {
+      data.awayScore = remote.awayScore;
+    }
   }
 
   return data;
