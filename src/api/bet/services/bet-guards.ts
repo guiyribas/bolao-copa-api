@@ -18,10 +18,38 @@ export function parseBetScores(homeScore: unknown, awayScore: unknown): ParsedSc
   return { ok: true, homeScore: h, awayScore: a };
 }
 
-type MatchGateInput = {
+export type MatchGateInput = {
   date?: string | Date | null;
   matchStatus?: string | null;
 };
+
+function parseKickoffMs(rawDate: string | Date): number | null {
+  const kickoff = new Date(rawDate);
+  const ms = kickoff.getTime();
+  return Number.isNaN(ms) ? null : ms;
+}
+
+/** `true` quando `now` é no instante do apito ou depois. */
+export function hasKickoffPassed(
+  match: Pick<MatchGateInput, 'date'>,
+  now: Date = new Date()
+): boolean {
+  const rawDate = match.date;
+  if (rawDate == null || rawDate === '') return false;
+  const kickoffMs = parseKickoffMs(rawDate as string | Date);
+  if (kickoffMs == null) return false;
+  return now.getTime() >= kickoffMs;
+}
+
+/** Palpites de outros participantes ficam visíveis ao vivo, finalizado ou após o kickoff. */
+export function arePoolMatchBetsRevealed(
+  match: MatchGateInput,
+  now: Date = new Date()
+): boolean {
+  const status = match.matchStatus ?? 'scheduled';
+  if (status === 'live' || status === 'finished') return true;
+  return hasKickoffPassed(match, now);
+}
 
 /** Bloqueia palpite se jogo já começou, está ao vivo ou terminou. */
 export function assertMatchAcceptsBet(
@@ -45,11 +73,10 @@ export function assertMatchAcceptsBet(
   if (rawDate == null || rawDate === '') {
     return { ok: false, message: 'Partida sem data agendada.' };
   }
-  const kickoff = new Date(rawDate as string | Date);
-  if (Number.isNaN(kickoff.getTime())) {
+  if (parseKickoffMs(rawDate as string | Date) == null) {
     return { ok: false, message: 'Data da partida inválida.' };
   }
-  if (now.getTime() >= kickoff.getTime()) {
+  if (hasKickoffPassed(match, now)) {
     return {
       ok: false,
       message: 'Não é possível alterar o palpite após o horário de início da partida.',

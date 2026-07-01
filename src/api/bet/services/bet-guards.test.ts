@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { assertMatchAcceptsBet, assertUserIsBetOwner } from './bet-guards';
+import {
+  arePoolMatchBetsRevealed,
+  assertMatchAcceptsBet,
+  assertUserIsBetOwner,
+} from './bet-guards';
 
 describe('assertMatchAcceptsBet', () => {
   const futureKickoff = '2099-06-01T18:00:00.000Z';
@@ -59,6 +63,53 @@ describe('assertMatchAcceptsBet', () => {
     const kickDate = new Date(futureKickoff);
     const r = assertMatchAcceptsBet({ date: kickDate, matchStatus: 'scheduled' }, nowBefore);
     assert.equal(r.ok, true);
+  });
+});
+
+describe('arePoolMatchBetsRevealed', () => {
+  const futureKickoff = '2099-06-01T18:00:00.000Z';
+  const nowBefore = new Date('2099-06-01T17:59:59.999Z');
+  const nowAtKickoff = new Date('2099-06-01T18:00:00.000Z');
+  const nowAfter = new Date('2099-06-01T18:00:01.000Z');
+
+  it('oculta antes do kickoff com status scheduled', () => {
+    assert.equal(
+      arePoolMatchBetsRevealed({ date: futureKickoff, matchStatus: 'scheduled' }, nowBefore),
+      false
+    );
+  });
+
+  it('revela no instante do apito', () => {
+    assert.equal(
+      arePoolMatchBetsRevealed({ date: futureKickoff, matchStatus: 'scheduled' }, nowAtKickoff),
+      true
+    );
+  });
+
+  it('revela após o kickoff com status ainda scheduled', () => {
+    assert.equal(
+      arePoolMatchBetsRevealed({ date: futureKickoff, matchStatus: 'scheduled' }, nowAfter),
+      true
+    );
+  });
+
+  it('revela com status live ou finished independente da data', () => {
+    assert.equal(
+      arePoolMatchBetsRevealed({ date: futureKickoff, matchStatus: 'live' }, nowBefore),
+      true
+    );
+    assert.equal(
+      arePoolMatchBetsRevealed({ date: futureKickoff, matchStatus: 'finished' }, nowBefore),
+      true
+    );
+  });
+
+  it('não revela sem data válida antes do status mudar', () => {
+    assert.equal(arePoolMatchBetsRevealed({ date: null, matchStatus: 'scheduled' }, nowAfter), false);
+    assert.equal(
+      arePoolMatchBetsRevealed({ date: 'não é data', matchStatus: 'scheduled' }, nowAfter),
+      false
+    );
   });
 });
 

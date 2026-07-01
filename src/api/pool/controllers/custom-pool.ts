@@ -1,5 +1,6 @@
 import type { Core } from '@strapi/strapi';
 
+import { arePoolMatchBetsRevealed } from '../../bet/services/bet-guards';
 import { isExactScorePoints, isKnockoutPhase } from '../../bet/services/scoring';
 
 type AdminLike = { id?: number | string; documentId?: string } | null;
@@ -519,7 +520,7 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
 
   /**
    * Palpites na partida agrupados por bolão em que o utilizador participa.
-   * Palpites de outros membros só são revelados com partida ao vivo ou finalizada;
+   * Palpites de outros membros são revelados ao vivo, finalizados ou após o kickoff (`date`);
    * o próprio utilizador vê sempre o seu palpite.
    */
   async poolMatchBets(ctx) {
@@ -542,7 +543,11 @@ const customPool = ({ strapi }: { strapi: Core.Strapi }) => ({
     }
 
     const statusRaw = (match as { matchStatus?: string }).matchStatus;
-    const revealed = statusRaw === 'live' || statusRaw === 'finished';
+    const matchDate = (match as { date?: string | Date | null }).date;
+    const revealed = arePoolMatchBetsRevealed({
+      matchStatus: statusRaw,
+      date: matchDate,
+    });
 
     let userDocumentId = user.documentId as string | undefined;
     if (!userDocumentId && user.id != null) {
